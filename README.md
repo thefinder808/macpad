@@ -4,10 +4,13 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 
 > **Disclaimer:** macpad is an independent, unofficial fan project. It is **not affiliated with, endorsed by, or sponsored by Microsoft Corporation**. "Windows," "Windows 11," and "Notepad" are trademarks of Microsoft Corporation. macpad ships none of Microsoft's proprietary code, fonts, or assets — only open-source components from third parties (see [Credits](#credits)).
 
+<a href="https://www.buymeacoffee.com/thefinder808" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="36"></a>
+
 ## Features
 
-- **Multi-tab editing** with a Win11-style tab strip
-- **TextKit 1** `NSTextView` core with all auto-substitutions disabled (no smart quotes, no autocorrect, no link detection)
+- **Multi-tab editing** with a Win11-style tab strip and per-tab undo history
+- **TextKit 1** `NSTextView` core — smart quotes, dash substitution, autocorrect, link detection, and data detection all disabled by default (matches Win11 Notepad's "what you type is what you get" behavior)
+- **Optional spellcheck** — off by default; toggle on in Settings (no autocorrect — only red underlines + right-click suggestions)
 - **Find / Replace** overlay with regex, match-case, and whole-word toggles
 - **BOM-aware file open** — UTF-8 (with or without BOM), UTF-16 LE/BE, Windows-1252
 - **Line-ending conversion** — LF, CRLF, CR (undoable)
@@ -18,7 +21,31 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 - **Dark / Light / System** themes (Win11 color tokens verified against the open-source `microsoft-ui-xaml` repo)
 - **Finder integration** — Open With, drag-and-drop a file onto the window to open as a new tab
 - **Tab drag-reorder**
+- **Custom app icon** designed for macpad — paper stack on a blue gradient (not Microsoft's Notepad icon)
 - **Notarized .dmg distribution** via `./build.sh notarize`
+
+## Keyboard shortcuts
+
+| Action | Shortcut |
+|---|---|
+| New tab | ⌘T |
+| Open file | ⌘O |
+| Save | ⌘S |
+| Save As | ⇧⌘S |
+| Close tab | ⌘W |
+| Next tab | ⌘⇧] |
+| Previous tab | ⌘⇧[ |
+| Find | ⌘F |
+| Find next | ⌘G |
+| Find previous | ⇧⌘G |
+| Replace | ⌘H |
+| Toggle word wrap | ⌥⌘W |
+| Zoom in | ⌘= |
+| Zoom out | ⌘- |
+| Reset zoom | ⌘0 |
+| Settings | (click the gear icon at the top-right of the tab strip) |
+
+Standard macOS text-editing shortcuts (⌘Z undo, ⇧⌘Z redo, ⌘A select all, ⌘X/⌘C/⌘V cut/copy/paste) all work via the responder chain.
 
 ## Install
 
@@ -57,8 +84,17 @@ xcrun notarytool store-credentials macpad-notary \
 - **One shared `NSTextView`** with `textStorage` and `undoManager` swapped on tab activation — O(1) views, O(N) storages, matches Sublime / VS Code.
 - **Reference-type `TabState`** because `NSTextStorage` and `NSUndoManager` have identity.
 - **TextKit 1**, not TextKit 2 — macOS 14.x TextKit 2 has open regressions on temporary-attribute drawing (used for find highlights) and IME composition.
+- **Spellcheck yes, autocorrect no** — macOS NSTextView has no per-view override for sentence-start capitalization or period substitution, so enabling `isAutomaticSpellingCorrectionEnabled` would silently drag along the system-wide auto-capitalization (mangling `teh` → `Teh`). Spellcheck is wired to a per-tab `isContinuousSpellCheckingEnabled` toggle; autocorrect is hard-`false`. See [CLAUDE.md](CLAUDE.md) for the gory details.
 
 See [CLAUDE.md](CLAUDE.md) for build commands, gotchas, and design conventions.
+
+## Support
+
+If macpad makes your Mac-life slightly nicer and you'd like to say thanks:
+
+<a href="https://www.buymeacoffee.com/thefinder808" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="36"></a>
+
+Or just star the repo — that's also great.
 
 ## Credits
 
@@ -69,6 +105,8 @@ macpad would not have been possible without these open-source components:
 - **[`microsoft-ui-xaml`](https://github.com/microsoft/microsoft-ui-xaml)** — MIT-licensed Win11 design token reference (`Common_themeresources_any.xaml`, `TabView_themeresources.xaml`).
 
 All three of these are explicitly open-sourced by Microsoft under permissive licenses. No proprietary Microsoft code, fonts, or assets are bundled with macpad.
+
+The app icon was designed with [Claude Design](https://claude.com/design).
 
 The macOS-side architecture borrows conventions established in two of my earlier macOS apps, [MacPerf](https://github.com/thefinder808/macperf) and [TraceView](https://github.com/thefinder808/traceview) — `build.sh` notarize pipeline, `AppTheme` protocol, the `isMenuTracking` gate against menu-tracking flicker, and the SwiftPM-only project layout.
 
