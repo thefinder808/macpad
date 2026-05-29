@@ -18,7 +18,8 @@ struct EditorPane: View {
                     theme: theme,
                     wordWrap: settingsManager.wordWrap,
                     fontName: settingsManager.editorFontName,
-                    baseFontSize: CGFloat(settingsManager.editorFontSize)
+                    baseFontSize: CGFloat(settingsManager.editorFontSize),
+                    spellChecking: settingsManager.spellChecking
                 )
             } else {
                 Color.clear
@@ -36,13 +37,15 @@ private struct ZoomingEditor: View {
     let wordWrap: Bool
     let fontName: String
     let baseFontSize: CGFloat
+    let spellChecking: Bool
 
     var body: some View {
         EditorTextView(
             tab: tab,
             theme: theme,
             font: resolveFont(),
-            wordWrap: wordWrap
+            wordWrap: wordWrap,
+            spellChecking: spellChecking
         )
     }
 

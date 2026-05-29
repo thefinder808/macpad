@@ -23,8 +23,8 @@ set -euo pipefail
 
 APP_NAME="macpad"
 BUNDLE_ID="com.macpad.app"
-BUNDLE_VERSION="1.0.2"
-BUNDLE_SHORT_VERSION="1.0.2"
+BUNDLE_VERSION="1.0.3"
+BUNDLE_SHORT_VERSION="1.0.3"
 OUT_DIR="build"
 APP_BUNDLE="${OUT_DIR}/${APP_NAME}.app"
 ICON_SRC="Resources/AppIcon.icns"
@@ -80,9 +80,9 @@ make_info_plist() {
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
   <key>NSSupportsAutomaticTermination</key>
-  <true/>
+  <false/>
   <key>NSSupportsSuddenTermination</key>
-  <true/>
+  <false/>
   <key>NSHumanReadableCopyright</key>
   <string>© 2026 Nathaniel Graham.</string>
   <key>CFBundleDocumentTypes</key>

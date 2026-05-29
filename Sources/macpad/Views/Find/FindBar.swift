@@ -46,6 +46,7 @@ struct FindBar: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(theme.editorSecondaryText)
+            .help(findState.isReplaceMode ? "Hide Replace" : "Show Replace")
 
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 12))
@@ -71,13 +72,13 @@ struct FindBar: View {
                     .fixedSize()
             }
 
-            optionToggle(label: "Aa", isOn: $findState.matchCase)
-            optionToggle(label: "Ab|", isOn: $findState.wholeWord)
-            optionToggle(label: ".*", isOn: $findState.useRegex)
+            optionToggle(label: "Aa", help: "Match case", isOn: $findState.matchCase)
+            optionToggle(label: "Ab|", help: "Match whole word", isOn: $findState.wholeWord)
+            optionToggle(label: ".*", help: "Use regular expression", isOn: $findState.useRegex)
 
-            iconButton(systemName: "chevron.up", action: onPrevious)
-            iconButton(systemName: "chevron.down", action: onNext)
-            iconButton(systemName: "xmark") { findState.isVisible = false }
+            iconButton(systemName: "chevron.up", help: "Previous match (⇧⌘G)", action: onPrevious)
+            iconButton(systemName: "chevron.down", help: "Next match (⌘G)", action: onNext)
+            iconButton(systemName: "xmark", help: "Close find bar") { findState.isVisible = false }
         }
         .frame(height: Dim.findInputHeight)
         .padding(.horizontal, 8)
@@ -123,7 +124,7 @@ struct FindBar: View {
     }
 
     @ViewBuilder
-    private func optionToggle(label: String, isOn: Binding<Bool>) -> some View {
+    private func optionToggle(label: String, help: String, isOn: Binding<Bool>) -> some View {
         Button { isOn.wrappedValue.toggle(); onFindChanged() } label: {
             Text(label)
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -135,10 +136,11 @@ struct FindBar: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(isOn.wrappedValue ? Color.accentColor : theme.editorSecondaryText)
+        .help(help)
     }
 
     @ViewBuilder
-    private func iconButton(systemName: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(systemName: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 11, weight: .medium))
@@ -146,5 +148,6 @@ struct FindBar: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(theme.editorSecondaryText)
+        .help(help)
     }
 }

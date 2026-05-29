@@ -20,6 +20,7 @@ struct EditorTextView: NSViewRepresentable {
     let theme: any AppTheme
     let font: NSFont
     let wordWrap: Bool
+    let spellChecking: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(tab: tab) }
 
@@ -82,7 +83,8 @@ struct EditorTextView: NSViewRepresentable {
 
         applyTheme(to: textView)
         textView.font = font
-        applyFindHighlights(textView: textView)
+        textView.isContinuousSpellCheckingEnabled = spellChecking
+        applyFindHighlights(textView: textView, coordinator: context.coordinator)
 
         if let container = textView.textContainer {
             container.widthTracksTextView = wordWrap
@@ -108,6 +110,12 @@ struct EditorTextView: NSViewRepresentable {
     final class Coordinator: NSObject, NSTextViewDelegate, NSTextStorageDelegate {
         var tab: TabState
         weak var textView: NSTextView?
+        // The match range we last moved the caret to. Guards against a
+        // re-entrant loop: applyFindHighlights runs on every updateNSView,
+        // and moving the caret fires textViewDidChangeSelection, which
+        // mutates @Published state, which forces another updateNSView. We
+        // only navigate when the *target match* actually changes.
+        var lastNavigatedRange: NSRange?
 
         init(tab: TabState) { self.tab = tab }
 
@@ -148,7 +156,7 @@ struct EditorTextView: NSViewRepresentable {
         textView.isAutomaticTextReplacementEnabled = false
         textView.isAutomaticLinkDetectionEnabled = false
         textView.isAutomaticDataDetectionEnabled = false
-        textView.isContinuousSpellCheckingEnabled = false
+        textView.isContinuousSpellCheckingEnabled = spellChecking
         textView.isGrammarCheckingEnabled = false
         textView.usesFindBar = false              // we render our own (Phase 9)
         textView.usesFontPanel = false
@@ -162,16 +170,24 @@ struct EditorTextView: NSViewRepresentable {
 
     // MARK: - Find highlighting
 
-    private func applyFindHighlights(textView: NSTextView) {
+    private func applyFindHighlights(textView: NSTextView, coordinator: Coordinator) {
         guard let lm = textView.layoutManager else { return }
         let storageLength = tab.textStorage.length
         let fullRange = NSRange(location: 0, length: storageLength)
 
-        // Clear stale highlights from the previous render.
+        // Clear stale highlights from the previous render. This is a
+        // temporary-attribute change only — it does NOT mutate the text
+        // storage or fire selection/edit delegates, so it's safe to run
+        // on every render.
         lm.removeTemporaryAttribute(.backgroundColor, forCharacterRange: fullRange)
 
         let fs = tab.findState
-        guard fs.isVisible, !fs.matches.isEmpty else { return }
+        guard fs.isVisible, !fs.matches.isEmpty else {
+            // Find closed (or no matches) — reset navigation memory so the
+            // next search starts fresh.
+            coordinator.lastNavigatedRange = nil
+            return
+        }
 
         let normal = NSColor(theme.findHighlight)
         let active = NSColor(theme.findHighlightActive)
@@ -181,13 +197,23 @@ struct EditorTextView: NSViewRepresentable {
             lm.addTemporaryAttribute(.backgroundColor, value: color, forCharacterRange: range)
         }
 
-        // Scroll the current match into view and move the caret to its end.
-        if let idx = fs.currentMatchIndex, fs.matches.indices.contains(idx) {
-            let r = fs.matches[idx]
-            if NSMaxRange(r) <= storageLength {
-                textView.scrollRangeToVisible(r)
-                textView.setSelectedRange(NSRange(location: NSMaxRange(r), length: 0))
-            }
+        // Move the caret to / scroll to the current match ONLY when that
+        // match changed since we last navigated. Doing this unconditionally
+        // on every render creates an infinite loop:
+        //   setSelectedRange → textViewDidChangeSelection → @Published edit
+        //   → re-render → updateNSView → applyFindHighlights → setSelectedRange …
+        // Gating on the match range breaks the cycle: after the first move,
+        // the re-render sees the same target and skips it.
+        guard let idx = fs.currentMatchIndex, fs.matches.indices.contains(idx) else {
+            coordinator.lastNavigatedRange = nil
+            return
+        }
+        let r = fs.matches[idx]
+        guard NSMaxRange(r) <= storageLength else { return }
+        if coordinator.lastNavigatedRange != r {
+            coordinator.lastNavigatedRange = r
+            textView.scrollRangeToVisible(r)
+            textView.setSelectedRange(NSRange(location: NSMaxRange(r), length: 0))
         }
     }
 

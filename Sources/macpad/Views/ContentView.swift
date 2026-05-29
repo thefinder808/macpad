@@ -11,7 +11,19 @@ struct ContentView: View {
         ZStack {
             MicaBackdrop(isDark: theme.isDark)
             ZStack {
-                editorLayer(theme: theme)
+                // EditorLayer takes the active tab as an @ObservedObject so
+                // it re-renders on the tab's *own* publishes (e.g. the find
+                // bar toggling visible). ContentView observes only appState,
+                // and a nested findState change does NOT reach appState —
+                // @Published var tabs fires on array mutation, not on a
+                // member object's property change. Routing the find-bar
+                // conditional through a view that directly observes the tab
+                // is what makes ⌘F actually show the bar.
+                if let tab = appState.book.activeTab {
+                    EditorLayer(tab: tab, theme: theme)
+                } else {
+                    Color.clear
+                }
                 if appState.isShowingSettings {
                     SettingsRoot()
                         .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -58,11 +70,20 @@ struct ContentView: View {
         return accepted
     }
 
-    @ViewBuilder
-    private func editorLayer(theme: any AppTheme) -> some View {
+}
+
+// The tab-strip / find-bar / editor / status-bar stack for the active tab.
+// Holds the active tab as @ObservedObject so it re-renders on the tab's own
+// publishes — crucially, when findState.isVisible toggles (⌘F / ⌘H). See the
+// note in ContentView.body for why this can't live inline in ContentView.
+private struct EditorLayer: View {
+    @ObservedObject var tab: TabState
+    let theme: any AppTheme
+
+    var body: some View {
         VStack(spacing: 0) {
             TabStrip()
-            if let tab = appState.book.activeTab, tab.findState.isVisible {
+            if tab.findState.isVisible {
                 FindBar(
                     findState: tab.findState,
                     theme: theme,
@@ -75,14 +96,9 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
             EditorPane()
-            if let tab = appState.book.activeTab {
-                StatusBarView(tab: tab, theme: theme)
-            } else {
-                Color.clear.frame(height: Dim.statusBarHeight)
-            }
+            StatusBarView(tab: tab, theme: theme)
         }
-        .animation(.easeOut(duration: Motion.findBarSlide),
-                   value: appState.book.activeTab?.findState.isVisible)
+        .animation(.easeOut(duration: Motion.findBarSlide), value: tab.findState.isVisible)
     }
 }
 

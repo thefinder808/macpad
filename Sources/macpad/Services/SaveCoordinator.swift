@@ -38,6 +38,11 @@ enum SaveCoordinator {
             tab.fileURL = url
             tab.displayName = url.lastPathComponent
             tab.isDirty = false
+            // Persist the new name/URL/clean-state to the session store
+            // immediately. The debounced autosave only fires on text edits,
+            // so without this the on-disk meta.json keeps the pre-save
+            // "Untitled"/nil and a restored tab loses its filename.
+            AutosaveStore.write(tab: tab)
             return true
         } catch {
             presentError(error)
