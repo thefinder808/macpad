@@ -2,6 +2,8 @@
 
 A native macOS text editor inspired by the Windows 11 Notepad.
 
+<p align="center"><img src="docs/screenshots/hero.png" width="820" alt="macpad in dark mode"></p>
+
 > **Disclaimer:** macpad is an independent, unofficial fan project. It is **not affiliated with, endorsed by, or sponsored by Microsoft Corporation**. "Windows," "Windows 11," and "Notepad" are trademarks of Microsoft Corporation. macpad ships none of Microsoft's proprietary code, fonts, or assets — only open-source components from third parties (see [Credits](#credits)).
 
 <a href="https://www.buymeacoffee.com/thefinder808" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="36"></a>
@@ -46,6 +48,14 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 | Settings | (click the gear icon at the top-right of the tab strip) |
 
 Standard macOS text-editing shortcuts (⌘Z undo, ⇧⌘Z redo, ⌘A select all, ⌘X/⌘C/⌘V cut/copy/paste) all work via the responder chain.
+
+## Screenshots
+
+<p align="center"><img src="docs/screenshots/multi-tab.png" width="820" alt="Multiple tabs open"></p>
+
+<p align="center"><img src="docs/screenshots/find-replace.png" width="820" alt="Find and replace bar with regex and match-case toggles"></p>
+
+<p align="center"><img src="docs/screenshots/settings.png" width="820" alt="Win11-styled settings page"></p>
 
 ## Install
 
