@@ -94,9 +94,7 @@ xcrun notarytool store-credentials macpad-notary \
 - **One shared `NSTextView`** with `textStorage` and `undoManager` swapped on tab activation — O(1) views, O(N) storages, matches Sublime / VS Code.
 - **Reference-type `TabState`** because `NSTextStorage` and `NSUndoManager` have identity.
 - **TextKit 1**, not TextKit 2 — macOS 14.x TextKit 2 has open regressions on temporary-attribute drawing (used for find highlights) and IME composition.
-- **Spellcheck yes, autocorrect no** — macOS NSTextView has no per-view override for sentence-start capitalization or period substitution, so enabling `isAutomaticSpellingCorrectionEnabled` would silently drag along the system-wide auto-capitalization (mangling `teh` → `Teh`). Spellcheck is wired to a per-tab `isContinuousSpellCheckingEnabled` toggle; autocorrect is hard-`false`. See [CLAUDE.md](CLAUDE.md) for the gory details.
-
-See [CLAUDE.md](CLAUDE.md) for build commands, gotchas, and design conventions.
+- **Spellcheck yes, autocorrect no** — macOS NSTextView has no per-view override for sentence-start capitalization or period substitution, so enabling `isAutomaticSpellingCorrectionEnabled` would silently drag along the system-wide auto-capitalization (mangling `teh` → `Teh`). Spellcheck is wired to a per-tab `isContinuousSpellCheckingEnabled` toggle; autocorrect is hard-`false`.
 
 ## Support
 
