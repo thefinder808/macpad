@@ -16,6 +16,7 @@ struct SettingsRoot: View {
                 VStack(alignment: .leading, spacing: 24) {
                     appearanceSection(theme: theme)
                     textFormattingSection(theme: theme)
+                    spellingSection(theme: theme)
                     autosaveSection(theme: theme)
                 }
                 .padding(.horizontal, 56)
@@ -108,6 +109,19 @@ struct SettingsRoot: View {
                         icon: "text.alignleft",
                         theme: theme) {
                 Toggle("", isOn: $settingsManager.wordWrap)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+        }
+    }
+
+    private func spellingSection(theme: any AppTheme) -> some View {
+        SettingsSection(title: "Spelling", theme: theme) {
+            SettingsRow(title: "Check spelling",
+                        subtitle: "Underline misspelled words and offer corrections on right-click.",
+                        icon: "text.badge.checkmark",
+                        theme: theme) {
+                Toggle("", isOn: $settingsManager.spellChecking)
                     .toggleStyle(.switch)
                     .labelsHidden()
             }

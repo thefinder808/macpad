@@ -114,6 +114,11 @@ final class TabBookViewModel: ObservableObject {
         )
         tabs.append(tab)
         activeTabID = tab.id
+        // Write content.txt + meta.json now. Opening a file doesn't go
+        // through the text-edit autosave path (the initial string is set
+        // before the NSTextStorage delegate is attached), so without this
+        // the tab would have no session record until first edit.
+        AutosaveStore.write(tab: tab)
         return tab
     }
 

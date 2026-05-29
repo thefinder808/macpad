@@ -10,6 +10,7 @@ final class SettingsManager: ObservableObject {
     private static let restoreOnLaunchKey = "macpad.restoreOnLaunch"
     private static let editorFontNameKey = "macpad.editorFontName"
     private static let editorFontSizeKey = "macpad.editorFontSize"
+    private static let spellCheckingKey = "macpad.spellChecking"
 
     @Published var wordWrap: Bool {
         didSet { UserDefaults.standard.set(wordWrap, forKey: Self.wordWrapKey) }
@@ -23,6 +24,9 @@ final class SettingsManager: ObservableObject {
     @Published var editorFontSize: Double {
         didSet { UserDefaults.standard.set(editorFontSize, forKey: Self.editorFontSizeKey) }
     }
+    @Published var spellChecking: Bool {
+        didSet { UserDefaults.standard.set(spellChecking, forKey: Self.spellCheckingKey) }
+    }
 
     init() {
         let d = UserDefaults.standard
@@ -30,5 +34,6 @@ final class SettingsManager: ObservableObject {
         self.restoreOnLaunch = d.object(forKey: Self.restoreOnLaunchKey) as? Bool ?? true
         self.editorFontName = d.string(forKey: Self.editorFontNameKey) ?? ".AppleSystemUIFontMonospaced-Regular"
         self.editorFontSize = (d.object(forKey: Self.editorFontSizeKey) as? Double) ?? Double(FontRole.editorDefaultSize)
+        self.spellChecking = d.object(forKey: Self.spellCheckingKey) as? Bool ?? false
     }
 }
