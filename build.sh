@@ -36,10 +36,15 @@ ENTITLEMENTS_FILE="Resources/macpad.entitlements"
 # Override via env: DEVELOPER_ID="…" ./build.sh notarize
 DEVELOPER_ID="${DEVELOPER_ID:-Developer ID Application: Nathaniel Graham (Q6LRJQSA42)}"
 # Keychain profile storing Apple ID + app-specific password + team ID for
-# notarytool. Set up once with:
-#   xcrun notarytool store-credentials macpad-notary \
+# notarytool. An app-specific password is NOT per-app-you-build — it
+# authenticates your Apple ID, and notarization is gated by the Developer
+# ID cert / Team ID on the binary. So one profile works for every app
+# under the same developer account; we reuse the shared one set up for
+# TraceView. Recreate it (or any name) with:
+#   xcrun notarytool store-credentials traceview-notary \
 #     --apple-id <email> --team-id Q6LRJQSA42 --password <app-specific>
-NOTARY_PROFILE="${NOTARY_PROFILE:-macpad-notary}"
+# Override per-invocation with: NOTARY_PROFILE="other-profile" ./build.sh notarize
+NOTARY_PROFILE="${NOTARY_PROFILE:-traceview-notary}"
 
 make_info_plist() {
   cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
