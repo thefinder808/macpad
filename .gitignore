@@ -6,3 +6,8 @@ dist/
 DerivedData/
 *.xcodeproj
 .DS_Store
+
+# Local-only / personal (never publish)
+.claude/
+.remember/
+CLAUDE.md
