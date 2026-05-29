@@ -4,7 +4,7 @@ import AppKit
 // If this runs later (e.g. inside an async WindowAccessor block), the View
 // menu gets validated once with tabs allowed, and the dispatched mutation
 // forces a re-validation that makes "Show Tab Bar" / "Show All Tabs" /
-// "Enter Full Screen" flicker on first menu open. Documented in CLAUDE.md.
+// "Enter Full Screen" flicker on first menu open.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     // The shared AppState — created here so we can flush autosave during
     // termination. SwiftUI also reads it via its own @StateObject in

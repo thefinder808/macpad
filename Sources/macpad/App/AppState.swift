@@ -10,7 +10,7 @@ import Combine
 // makes AppKit cancel tracking on any open menu — items appear for ~1s
 // then disappear. Fix: install NSMenu.didBegin/EndTrackingNotification
 // observers and short-circuit child publish forwarding while a menu is
-// open. Documented in ~/.claude/CLAUDE.md (burned on MacPerf + TraceView).
+// open. (Hit this before on MacPerf + TraceView.)
 final class AppState: ObservableObject {
     @Published var isShowingSettings: Bool = false
     private(set) var isMenuTracking = false
