@@ -11,6 +11,8 @@ final class SettingsManager: ObservableObject {
     private static let editorFontNameKey = "macpad.editorFontName"
     private static let editorFontSizeKey = "macpad.editorFontSize"
     private static let spellCheckingKey = "macpad.spellChecking"
+    private static let alwaysOnTopKey = "macpad.alwaysOnTop"
+    private static let selectLineFromMarginKey = "macpad.selectLineFromMargin"
 
     @Published var wordWrap: Bool {
         didSet { UserDefaults.standard.set(wordWrap, forKey: Self.wordWrapKey) }
@@ -27,6 +29,12 @@ final class SettingsManager: ObservableObject {
     @Published var spellChecking: Bool {
         didSet { UserDefaults.standard.set(spellChecking, forKey: Self.spellCheckingKey) }
     }
+    @Published var alwaysOnTop: Bool {
+        didSet { UserDefaults.standard.set(alwaysOnTop, forKey: Self.alwaysOnTopKey) }
+    }
+    @Published var selectLineFromMargin: Bool {
+        didSet { UserDefaults.standard.set(selectLineFromMargin, forKey: Self.selectLineFromMarginKey) }
+    }
 
     init() {
         let d = UserDefaults.standard
@@ -35,5 +43,7 @@ final class SettingsManager: ObservableObject {
         self.editorFontName = d.string(forKey: Self.editorFontNameKey) ?? ".AppleSystemUIFontMonospaced-Regular"
         self.editorFontSize = (d.object(forKey: Self.editorFontSizeKey) as? Double) ?? Double(FontRole.editorDefaultSize)
         self.spellChecking = d.object(forKey: Self.spellCheckingKey) as? Bool ?? false
+        self.alwaysOnTop = d.object(forKey: Self.alwaysOnTopKey) as? Bool ?? false
+        self.selectLineFromMargin = d.object(forKey: Self.selectLineFromMarginKey) as? Bool ?? true
     }
 }

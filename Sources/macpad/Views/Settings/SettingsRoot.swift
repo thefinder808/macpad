@@ -17,6 +17,7 @@ struct SettingsRoot: View {
                     appearanceSection(theme: theme)
                     textFormattingSection(theme: theme)
                     spellingSection(theme: theme)
+                    windowSection(theme: theme)
                     autosaveSection(theme: theme)
                 }
                 .padding(.horizontal, 56)
@@ -112,6 +113,15 @@ struct SettingsRoot: View {
                     .toggleStyle(.switch)
                     .labelsHidden()
             }
+            SettingsRowDivider(theme: theme)
+            SettingsRow(title: "Select line from margin",
+                        subtitle: "Click the left margin beside a line to select the whole line.",
+                        icon: "cursorarrow.click",
+                        theme: theme) {
+                Toggle("", isOn: $settingsManager.selectLineFromMargin)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
         }
     }
 
@@ -122,6 +132,19 @@ struct SettingsRoot: View {
                         icon: "text.badge.checkmark",
                         theme: theme) {
                 Toggle("", isOn: $settingsManager.spellChecking)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+        }
+    }
+
+    private func windowSection(theme: any AppTheme) -> some View {
+        SettingsSection(title: "Window", theme: theme) {
+            SettingsRow(title: "Always on top",
+                        subtitle: "Keep the macpad window above other apps.",
+                        icon: "pin",
+                        theme: theme) {
+                Toggle("", isOn: $settingsManager.alwaysOnTop)
                     .toggleStyle(.switch)
                     .labelsHidden()
             }
