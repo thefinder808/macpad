@@ -28,7 +28,7 @@ final class LineSelectTextView: NSTextView {
 
     override func mouseDown(with event: NSEvent) {
         guard selectLineFromMargin, isInSelectionBar(event),
-              let lineRange = lineRange(at: event) else {
+              let range = lineContentsRange(at: event) else {
             marginDragAnchor = nil
             super.mouseDown(with: event)
             return
@@ -37,8 +37,8 @@ final class LineSelectTextView: NSTextView {
         // (not inactive-gray) highlight and keyboard actions work. Normally
         // super.mouseDown does this, but we're bypassing it for bar clicks.
         window?.makeFirstResponder(self)
-        marginDragAnchor = lineRange
-        setSelectedRange(lineRange)
+        marginDragAnchor = range
+        setSelectedRange(range)
         // Intentionally NOT calling super: that would start NSTextView's own
         // character-drag session and move the caret. We own the drag below.
     }
@@ -48,7 +48,7 @@ final class LineSelectTextView: NSTextView {
             super.mouseDragged(with: event)
             return
         }
-        if let current = lineRange(at: event) {
+        if let current = lineContentsRange(at: event) {
             setSelectedRange(NSUnionRange(anchor, current))
         }
         autoscroll(with: event)
@@ -79,11 +79,15 @@ final class LineSelectTextView: NSTextView {
         return p.x < selectionBarWidth
     }
 
-    // The full logical-line (paragraph) character range for the line under
-    // the event's vertical position. NSString.lineRange spans to the next
-    // newline, so in word-wrap mode this correctly grabs every wrapped
-    // fragment of the line, not just the visual row clicked.
-    private func lineRange(at event: NSEvent) -> NSRange? {
+    // The TEXT range of the logical line (paragraph) under the event's vertical
+    // position — from the line start to its contents end, EXCLUDING the trailing
+    // newline. Using contentsEnd (rather than NSString.lineRange, which spans
+    // through the line terminator) makes the selection end at the last
+    // character, like Notepad / Word, instead of highlighting edge-to-edge. In
+    // word-wrap mode this still grabs every wrapped fragment (it's the logical
+    // line); a multi-line drag keeps the interior newlines but drops the last
+    // line's trailing one.
+    private func lineContentsRange(at event: NSEvent) -> NSRange? {
         guard let lm = layoutManager, let tc = textContainer else { return nil }
         let ns = string as NSString
         guard ns.length > 0 else { return NSRange(location: 0, length: 0) }
@@ -97,6 +101,11 @@ final class LineSelectTextView: NSTextView {
                                      y: viewPoint.y - origin.y)
         let glyphIndex = lm.glyphIndex(for: containerPoint, in: tc)
         let charIndex = min(lm.characterIndexForGlyph(at: glyphIndex), ns.length - 1)
-        return ns.lineRange(for: NSRange(location: charIndex, length: 0))
+
+        var lineStart = 0
+        var contentsEnd = 0
+        ns.getLineStart(&lineStart, end: nil, contentsEnd: &contentsEnd,
+                        for: NSRange(location: charIndex, length: 0))
+        return NSRange(location: lineStart, length: contentsEnd - lineStart)
     }
 }
