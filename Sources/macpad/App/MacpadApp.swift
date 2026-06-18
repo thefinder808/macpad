@@ -57,8 +57,13 @@ struct MacpadApp: App {
                     if let tab = appState.book.activeTab { FindController.previous(tab) }
                 }
                 .keyboardShortcut("g", modifiers: [.command, .shift])
+                // Win11 Notepad uses Ctrl+H for Replace, but ⌘H is reserved by
+                // macOS for "Hide App" and silently shadows any app binding (the
+                // menu item even renders with no shortcut). Use the macOS-standard
+                // Find-and-Replace shortcut ⌥⌘F instead — ⌃⌘F is taken by Enter
+                // Full Screen, so avoid that too.
                 Button("Replace…") { showFindBar(replace: true) }
-                    .keyboardShortcut("h", modifiers: .command)
+                    .keyboardShortcut("f", modifiers: [.command, .option])
             }
 
             // View menu — word wrap, zoom, tab navigation

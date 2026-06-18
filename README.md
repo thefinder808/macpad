@@ -43,7 +43,7 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 | Find | ⌘F |
 | Find next | ⌘G |
 | Find previous | ⇧⌘G |
-| Replace | ⌘H |
+| Replace | ⌥⌘F |
 | Toggle word wrap | ⌥⌘W |
 | Zoom in | ⌘= |
 | Zoom out | ⌘- |
