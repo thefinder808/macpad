@@ -1,6 +1,12 @@
 import AppKit
 import Combine
 
+// Where "Send to macpad" (the macOS Services menu) should drop incoming text.
+enum ExternalTextDestination {
+    case newTab
+    case currentTab
+}
+
 // The collection of open tabs and which one is active. Phase 4 ships
 // with a single seed tab; Phase 5 wires the tab strip and add/close/
 // reorder operations.
@@ -125,6 +131,38 @@ final class TabBookViewModel: ObservableObject {
     func select(_ id: UUID) {
         guard tabs.contains(where: { $0.id == id }) else { return }
         activeTabID = id
+    }
+
+    /// Insert text received from another app (via the macOS Services menu)
+    /// into a new tab or the current tab, appended as a trailing line. Called
+    /// off the Services provider; does not activate the app, so the source
+    /// app keeps focus. Mirrors `open(url:)`'s immediate-autosave so the
+    /// addition survives even when macpad is in the background.
+    func receiveExternalText(_ text: String, into destination: ExternalTextDestination) {
+        switch destination {
+        case .newTab:
+            let tab = TabState(displayName: "Untitled", initialText: text)
+            tabs.append(tab)
+            activeTabID = tab.id
+            tab.isDirty = true
+            AutosaveStore.write(tab: tab)
+        case .currentTab:
+            let tab = activeTab ?? newUntitled()
+            let storage = tab.textStorage
+            let existing = storage.string as NSString
+            let needsNewline = existing.length > 0 && !existing.hasSuffix("\n")
+            let insert = (needsNewline ? "\n" : "") + text
+            // Direct storage edit — matches FindController's idiom. The active
+            // tab is mounted in the live NSTextView, so its storage delegate
+            // re-lays-out + marks dirty; the explicit writes below keep it
+            // correct even if the tab isn't currently bound to the editor.
+            storage.beginEditing()
+            storage.replaceCharacters(in: NSRange(location: storage.length, length: 0), with: insert)
+            storage.endEditing()
+            tab.isDirty = true
+            tab.recomputeMetrics()
+            AutosaveStore.write(tab: tab)
+        }
     }
 
     func reorder(from source: Int, to destination: Int) {

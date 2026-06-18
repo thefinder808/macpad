@@ -21,6 +21,7 @@ struct EditorTextView: NSViewRepresentable {
     let font: NSFont
     let wordWrap: Bool
     let spellChecking: Bool
+    let selectLineFromMargin: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(tab: tab) }
 
@@ -37,7 +38,8 @@ struct EditorTextView: NSViewRepresentable {
         container.heightTracksTextView = false
         layoutManager.addTextContainer(container)
 
-        let textView = NSTextView(frame: .zero, textContainer: container)
+        let textView = LineSelectTextView(frame: .zero, textContainer: container)
+        textView.selectLineFromMargin = selectLineFromMargin
         configure(textView)
         applyTheme(to: textView)
         textView.delegate = context.coordinator
@@ -84,6 +86,7 @@ struct EditorTextView: NSViewRepresentable {
         applyTheme(to: textView)
         textView.font = font
         textView.isContinuousSpellCheckingEnabled = spellChecking
+        (textView as? LineSelectTextView)?.selectLineFromMargin = selectLineFromMargin
         applyFindHighlights(textView: textView, coordinator: context.coordinator)
 
         if let container = textView.textContainer {

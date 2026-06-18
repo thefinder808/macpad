@@ -109,6 +109,41 @@ make_info_plist() {
       </array>
     </dict>
   </array>
+  <key>NSServices</key>
+  <array>
+    <dict>
+      <key>NSMenuItem</key>
+      <dict>
+        <key>default</key>
+        <string>Send to ${APP_NAME} (New Tab)</string>
+      </dict>
+      <key>NSMessage</key>
+      <string>sendSelectionToNewTab</string>
+      <key>NSPortName</key>
+      <string>${APP_NAME}</string>
+      <key>NSSendTypes</key>
+      <array>
+        <string>public.utf8-plain-text</string>
+        <string>public.plain-text</string>
+      </array>
+    </dict>
+    <dict>
+      <key>NSMenuItem</key>
+      <dict>
+        <key>default</key>
+        <string>Send to ${APP_NAME} (Current Tab)</string>
+      </dict>
+      <key>NSMessage</key>
+      <string>sendSelectionToCurrentTab</string>
+      <key>NSPortName</key>
+      <string>${APP_NAME}</string>
+      <key>NSSendTypes</key>
+      <array>
+        <string>public.utf8-plain-text</string>
+        <string>public.plain-text</string>
+      </array>
+    </dict>
+  </array>
 </dict>
 </plist>
 EOF

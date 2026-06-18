@@ -19,7 +19,8 @@ struct EditorPane: View {
                     wordWrap: settingsManager.wordWrap,
                     fontName: settingsManager.editorFontName,
                     baseFontSize: CGFloat(settingsManager.editorFontSize),
-                    spellChecking: settingsManager.spellChecking
+                    spellChecking: settingsManager.spellChecking,
+                    selectLineFromMargin: settingsManager.selectLineFromMargin
                 )
             } else {
                 Color.clear
@@ -38,6 +39,7 @@ private struct ZoomingEditor: View {
     let fontName: String
     let baseFontSize: CGFloat
     let spellChecking: Bool
+    let selectLineFromMargin: Bool
 
     var body: some View {
         EditorTextView(
@@ -45,7 +47,8 @@ private struct ZoomingEditor: View {
             theme: theme,
             font: resolveFont(),
             wordWrap: wordWrap,
-            spellChecking: spellChecking
+            spellChecking: spellChecking,
+            selectLineFromMargin: selectLineFromMargin
         )
     }
 

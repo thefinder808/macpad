@@ -11,8 +11,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MacpadApp; both refer to the same instance via this property.
     static let shared = AppState()
 
+    // Receives "Send to macpad" Services-menu messages from other apps.
+    // Retained here so NSApp.servicesProvider's weak-ish reference stays
+    // alive for the app's lifetime.
+    private let serviceProvider = ServiceProvider()
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Wire up the macOS Services provider so other apps' right-click →
+        // Services → "Send to macpad" reaches us. NSUpdateDynamicServices
+        // nudges the system to pick up our Info.plist NSServices entries.
+        NSApp.servicesProvider = serviceProvider
+        NSUpdateDynamicServices()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

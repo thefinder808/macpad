@@ -17,11 +17,14 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 - **BOM-aware file open** — UTF-8 (with or without BOM), UTF-16 LE/BE, Windows-1252
 - **Line-ending conversion** — LF, CRLF, CR (undoable)
 - **Per-tab zoom**, configurable font family and size, word wrap toggle
+- **Always on Top** — keep the window floating above other apps for quick copy/paste (View menu or Settings)
+- **Select line from the left margin** — click the left margin beside a line to select the whole line; drag to select several (toggle in Settings)
 - **Live status bar** — line/column, character count, word count, encoding, EOL, zoom
 - **Autosave** — every keystroke (debounced 750 ms) writes to `~/Library/Application Support/macpad/Sessions/`
 - **Session restore** — quit with tabs open, relaunch with the same tabs, cursor positions, and scroll offsets
 - **Dark / Light / System** themes (Win11 color tokens verified against the open-source `microsoft-ui-xaml` repo)
 - **Finder integration** — Open With, drag-and-drop a file onto the window to open as a new tab
+- **Send to macpad** — select text in any app, then right-click → Services → "Send to macpad (New Tab)" / "(Current Tab)" to stash it in macpad without leaving the app you're in (enable once in System Settings → Keyboard → Keyboard Shortcuts → Services)
 - **Tab drag-reorder**
 - **Custom app icon** designed for macpad — paper stack on a blue gradient (not Microsoft's Notepad icon)
 - **Notarized .dmg distribution** via `./build.sh notarize`

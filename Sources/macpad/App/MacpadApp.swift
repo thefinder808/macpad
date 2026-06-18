@@ -14,7 +14,7 @@ struct MacpadApp: App {
                 .environmentObject(appState)
                 .environmentObject(themeManager)
                 .environmentObject(settingsManager)
-                .background(WindowAccessor())
+                .background(WindowAccessor(alwaysOnTop: settingsManager.alwaysOnTop))
                 .preferredColorScheme(themeManager.preferredColorScheme)
         }
         .defaultSize(width: 900, height: 600)
@@ -67,6 +67,10 @@ struct MacpadApp: App {
                     settingsManager.wordWrap.toggle()
                 }
                 .keyboardShortcut("w", modifiers: [.command, .option])
+
+                Button(settingsManager.alwaysOnTop ? "Always on Top ✓" : "Always on Top") {
+                    settingsManager.alwaysOnTop.toggle()
+                }
 
                 Divider()
 
