@@ -28,6 +28,13 @@ final class TabState: Identifiable, ObservableObject {
     @Published var selectedRange: NSRange = NSRange(location: 0, length: 0)
     @Published var zoom: Double = 1.0      // 1.0 = 100%; legal steps: 0.5, 0.75, 1.0, 1.5, 2.0
     var scrollOffset: CGPoint = .zero      // Not @Published — written from scroll observer.
+    // The live NSTextView this tab is currently bound to. The editor swaps one
+    // shared text view between tabs (see EditorTextView), so only the active
+    // tab has this set. Programmatic edits (find/replace, Send-to-macpad) route
+    // through it via shouldChangeText/didChangeText so they register undo on
+    // `undoManager` — a bare NSTextStorage edit does not. weak: the view
+    // hierarchy owns the text view.
+    weak var boundTextView: NSTextView?
 
     private var findStateCancellable: AnyCancellable?
     private let autosaveDebouncer = Debouncer(delay: 0.75)

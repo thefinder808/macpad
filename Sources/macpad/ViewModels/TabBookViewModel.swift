@@ -152,13 +152,19 @@ final class TabBookViewModel: ObservableObject {
             let existing = storage.string as NSString
             let needsNewline = existing.length > 0 && !existing.hasSuffix("\n")
             let insert = (needsNewline ? "\n" : "") + text
-            // Direct storage edit — matches FindController's idiom. The active
-            // tab is mounted in the live NSTextView, so its storage delegate
-            // re-lays-out + marks dirty; the explicit writes below keep it
-            // correct even if the tab isn't currently bound to the editor.
-            storage.beginEditing()
-            storage.replaceCharacters(in: NSRange(location: storage.length, length: 0), with: insert)
-            storage.endEditing()
+            let end = NSRange(location: storage.length, length: 0)
+            // Route through the live text view (when the tab is bound) so the
+            // insert registers undo on the tab's UndoManager and ⌘Z removes it;
+            // fall back to a direct edit for an unmounted tab. Either way the
+            // storage delegate re-lays-out + marks dirty.
+            if let tv = tab.boundTextView, tv.shouldChangeText(in: end, replacementString: insert) {
+                storage.replaceCharacters(in: end, with: insert)
+                tv.didChangeText()
+            } else {
+                storage.beginEditing()
+                storage.replaceCharacters(in: end, with: insert)
+                storage.endEditing()
+            }
             tab.isDirty = true
             tab.recomputeMetrics()
             AutosaveStore.write(tab: tab)

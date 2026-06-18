@@ -44,6 +44,7 @@ struct EditorTextView: NSViewRepresentable {
         applyTheme(to: textView)
         textView.delegate = context.coordinator
         context.coordinator.textView = textView
+        tab.boundTextView = textView
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
@@ -68,6 +69,7 @@ struct EditorTextView: NSViewRepresentable {
         // Re-bind if the active TabState identity changed (Phase 5 hot-swap).
         if context.coordinator.tab !== tab {
             context.coordinator.tab.scrollOffset = scrollView.contentView.bounds.origin
+            context.coordinator.tab.boundTextView = nil
             tab.textStorage.delegate = context.coordinator
             if let lm = textView.layoutManager {
                 // Detach from outgoing, attach to incoming.
@@ -75,6 +77,7 @@ struct EditorTextView: NSViewRepresentable {
                 tab.textStorage.addLayoutManager(lm)
             }
             context.coordinator.tab = tab
+            tab.boundTextView = textView
             // Restore caret + scroll on incoming tab.
             textView.setSelectedRange(tab.selectedRange)
             DispatchQueue.main.async {

@@ -62,20 +62,36 @@ enum FindController {
         }
     }
 
-    /// Replace all matches in one undo group. Walk in reverse so earlier
-    /// ranges aren't invalidated by later replacements.
+    /// Replace all matches as a single undoable change. Walk in reverse so
+    /// earlier ranges aren't invalidated by later replacements.
     static func replaceAll(_ tab: TabState) {
         let fs = tab.findState
         guard !fs.matches.isEmpty else { return }
         let storage = tab.textStorage
+        let ranges = fs.matches
+        let replacement = fs.replacement
 
-        tab.undoManager.beginUndoGrouping()
-        storage.beginEditing()
-        for range in fs.matches.reversed() {
-            storage.replaceCharacters(in: range, with: fs.replacement)
+        // Route through the live text view so the change registers undo on the
+        // tab's UndoManager (a bare NSTextStorage edit does not). shouldChange
+        // /didChangeText also coalesces all the replacements into one ⌘Z step.
+        if let tv = tab.boundTextView,
+           tv.shouldChangeText(inRanges: ranges.map { NSValue(range: $0) },
+                               replacementStrings: Array(repeating: replacement, count: ranges.count)) {
+            storage.beginEditing()
+            for range in ranges.reversed() {
+                storage.replaceCharacters(in: range, with: replacement)
+            }
+            storage.endEditing()
+            tv.didChangeText()
+        } else {
+            // Fallback (tab not bound to a text view — shouldn't happen for the
+            // active tab the find bar operates on): edit directly, no undo.
+            storage.beginEditing()
+            for range in ranges.reversed() {
+                storage.replaceCharacters(in: range, with: replacement)
+            }
+            storage.endEditing()
         }
-        storage.endEditing()
-        tab.undoManager.endUndoGrouping()
 
         // Force a metric refresh — the storage delegate fires per-edit but
         // we want a clean final reading.
@@ -87,10 +103,14 @@ enum FindController {
                                           range: NSRange,
                                           with replacement: String) {
         let storage = tab.textStorage
-        tab.undoManager.beginUndoGrouping()
-        storage.beginEditing()
-        storage.replaceCharacters(in: range, with: replacement)
-        storage.endEditing()
-        tab.undoManager.endUndoGrouping()
+        // See replaceAll: route through the text view so ⌘Z can undo the edit.
+        if let tv = tab.boundTextView, tv.shouldChangeText(in: range, replacementString: replacement) {
+            storage.replaceCharacters(in: range, with: replacement)
+            tv.didChangeText()
+        } else {
+            storage.beginEditing()
+            storage.replaceCharacters(in: range, with: replacement)
+            storage.endEditing()
+        }
     }
 }
