@@ -6,10 +6,15 @@ struct MacpadApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState = AppDelegate.shared
     @StateObject private var themeManager = ThemeManager()
-    @StateObject private var settingsManager = SettingsManager()
+    @StateObject private var settingsManager = SettingsManager.shared
 
     var body: some Scene {
-        WindowGroup {
+        // A single `Window` with a stable id: macpad is single-window (tabs
+        // live in-window). The id lets the menu-bar "Open macpad" action bring
+        // the one window forward / recreate it if closed via
+        // openWindow(id: "main") — `Window` can't duplicate. The "macpad" title
+        // is hidden by WindowAccessor.
+        Window("macpad", id: "main") {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(themeManager)
@@ -109,6 +114,9 @@ struct MacpadApp: App {
                 }
             }
         }
+        // The menu-bar scratchpad item is an AppKit NSStatusItem built in
+        // AppDelegate (SwiftUI's MenuBarExtra would not render a status item in
+        // this app), so there's no MenuBarExtra scene here.
     }
 
     private func showFindBar(replace: Bool) {

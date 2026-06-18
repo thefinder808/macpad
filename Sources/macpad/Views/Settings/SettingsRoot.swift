@@ -148,6 +148,15 @@ struct SettingsRoot: View {
                     .toggleStyle(.switch)
                     .labelsHidden()
             }
+            SettingsRowDivider(theme: theme)
+            SettingsRow(title: "Show menu bar icon",
+                        subtitle: "A pop-down scratchpad in the menu bar for quick capture.",
+                        icon: "note.text",
+                        theme: theme) {
+                Toggle("", isOn: $settingsManager.showMenuBarItem)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
         }
     }
 

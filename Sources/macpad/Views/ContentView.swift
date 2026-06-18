@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var themeManager: ThemeManager
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         let theme = themeManager.current
@@ -50,6 +51,14 @@ struct ContentView: View {
                 try appState.book.open(url: url)
             } catch {
                 NSAlert(error: error).runModal()
+            }
+        }
+        // Capture the scene's openWindow action so the AppKit menu-bar popover
+        // can bring this window forward / reopen it if closed.
+        .onAppear {
+            appState.presentMainWindow = {
+                openWindow(id: "main")
+                NSApp.activate(ignoringOtherApps: true)
             }
         }
     }

@@ -14,6 +14,10 @@ import Combine
 final class AppState: ObservableObject {
     @Published var isShowingSettings: Bool = false
     private(set) var isMenuTracking = false
+    // Bridges the SwiftUI `openWindow` action out to AppKit (the menu-bar
+    // popover, built outside the scene). Captured by ContentView; calling it
+    // brings the main window forward / reopens it if closed.
+    var presentMainWindow: (() -> Void)?
     let book: TabBookViewModel
     private var subscriptions: Set<AnyCancellable> = []
 
