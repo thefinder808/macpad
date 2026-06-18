@@ -6,6 +6,10 @@ import Foundation
 // didSet that writes through. Future settings (font, wrap, restore) added
 // here as they're wired up in Phase 8/11/13.
 final class SettingsManager: ObservableObject {
+    // Shared instance so the AppKit menu-bar item (built in AppDelegate, outside
+    // the SwiftUI scene) reads the same settings the UI binds to.
+    static let shared = SettingsManager()
+
     private static let wordWrapKey = "macpad.wordWrap"
     private static let restoreOnLaunchKey = "macpad.restoreOnLaunch"
     private static let editorFontNameKey = "macpad.editorFontName"
@@ -13,6 +17,8 @@ final class SettingsManager: ObservableObject {
     private static let spellCheckingKey = "macpad.spellChecking"
     private static let alwaysOnTopKey = "macpad.alwaysOnTop"
     private static let selectLineFromMarginKey = "macpad.selectLineFromMargin"
+    private static let showMenuBarItemKey = "macpad.showMenuBarItem"
+    private static let scratchpadTextKey = "macpad.scratchpadText"
 
     @Published var wordWrap: Bool {
         didSet { UserDefaults.standard.set(wordWrap, forKey: Self.wordWrapKey) }
@@ -35,6 +41,14 @@ final class SettingsManager: ObservableObject {
     @Published var selectLineFromMargin: Bool {
         didSet { UserDefaults.standard.set(selectLineFromMargin, forKey: Self.selectLineFromMarginKey) }
     }
+    @Published var showMenuBarItem: Bool {
+        didSet { UserDefaults.standard.set(showMenuBarItem, forKey: Self.showMenuBarItemKey) }
+    }
+    // The menu-bar scratchpad buffer. Persisted so a quick jot survives quit;
+    // the pop-down's Clear button empties it.
+    @Published var scratchpadText: String {
+        didSet { UserDefaults.standard.set(scratchpadText, forKey: Self.scratchpadTextKey) }
+    }
 
     init() {
         let d = UserDefaults.standard
@@ -45,5 +59,7 @@ final class SettingsManager: ObservableObject {
         self.spellChecking = d.object(forKey: Self.spellCheckingKey) as? Bool ?? false
         self.alwaysOnTop = d.object(forKey: Self.alwaysOnTopKey) as? Bool ?? false
         self.selectLineFromMargin = d.object(forKey: Self.selectLineFromMarginKey) as? Bool ?? true
+        self.showMenuBarItem = d.object(forKey: Self.showMenuBarItemKey) as? Bool ?? true
+        self.scratchpadText = d.string(forKey: Self.scratchpadTextKey) ?? ""
     }
 }
