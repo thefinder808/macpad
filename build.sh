@@ -25,8 +25,8 @@ set -euo pipefail
 
 APP_NAME="macpad"
 BUNDLE_ID="com.macpad.app"
-BUNDLE_VERSION="1.0.4"
-BUNDLE_SHORT_VERSION="1.0.4"
+BUNDLE_VERSION="1.0.5"
+BUNDLE_SHORT_VERSION="1.0.5"
 OUT_DIR="build"
 APP_BUNDLE="${OUT_DIR}/${APP_NAME}.app"
 ICON_SRC="Resources/AppIcon.icns"
@@ -56,13 +56,13 @@ SU_FEED_URL="https://thefinder808.github.io/macpad/appcast.xml"
 # publish-appcast actually places the DMGs (/releases/) or Sparkle reports
 # "no update" with a silent 404 from GitHub Pages.
 SU_DOWNLOAD_URL_PREFIX="https://thefinder808.github.io/macpad/releases/"
-# EdDSA public key — generate ONCE with:
-#   .build/artifacts/sparkle/Sparkle/bin/generate_keys
-# (the private key is auto-stored in the login Keychain as
-# "https://sparkle-project.org" — never lose it; it signs every future update).
-# EMPTY here = key generation deferred. Empty disables runtime signature
-# verification (fine for dev); `notarize` refuses to ship without it.
-SU_PUBLIC_ED_KEY="${SU_PUBLIC_ED_KEY:-}"
+# EdDSA public key. This is the SHARED fleet key — the same Sparkle key used by
+# TraceView (private key lives once in the login Keychain as
+# "https://sparkle-project.org"; never lose it — it signs every future update).
+# generate_appcast signs the DMG with that private key automatically. To rotate
+# or mint a dedicated key: .build/artifacts/sparkle/Sparkle/bin/generate_keys
+# Override via env: SU_PUBLIC_ED_KEY="…" ./build.sh notarize
+SU_PUBLIC_ED_KEY="${SU_PUBLIC_ED_KEY:-OkisT+RinXia2GCpnFmXZ2ArHab4lYWXa9LPg4IsGoM=}"
 
 make_info_plist() {
   # Emit SUPublicEDKey only when a key is set; an empty value would tell
