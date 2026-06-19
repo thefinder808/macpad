@@ -7,6 +7,7 @@ struct SettingsRoot: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var settingsManager: SettingsManager
+    @EnvironmentObject var updater: UpdaterService
 
     var body: some View {
         let theme = themeManager.current
@@ -19,6 +20,7 @@ struct SettingsRoot: View {
                     spellingSection(theme: theme)
                     windowSection(theme: theme)
                     autosaveSection(theme: theme)
+                    updatesSection(theme: theme)
                 }
                 .padding(.horizontal, 56)
                 .padding(.top, 36)
@@ -169,6 +171,34 @@ struct SettingsRoot: View {
                 Toggle("", isOn: $settingsManager.restoreOnLaunch)
                     .toggleStyle(.switch)
                     .labelsHidden()
+            }
+        }
+    }
+
+    private func updatesSection(theme: any AppTheme) -> some View {
+        // Sparkle's automaticallyChecksForUpdates is a plain get/set on the
+        // updater controller (not @Published), so wrap it in a manual Binding.
+        let autoCheck = Binding(
+            get: { updater.automaticallyChecksForUpdates },
+            set: { updater.automaticallyChecksForUpdates = $0 }
+        )
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+        return SettingsSection(title: "Software updates", theme: theme) {
+            SettingsRow(title: "Automatically check for updates",
+                        subtitle: "Look for new versions in the background and offer to install them.",
+                        icon: "arrow.triangle.2.circlepath",
+                        theme: theme) {
+                Toggle("", isOn: autoCheck)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+            SettingsRowDivider(theme: theme)
+            SettingsRow(title: "Check for updates",
+                        subtitle: "You're on macpad \(version).",
+                        icon: "sparkles",
+                        theme: theme) {
+                Button("Check Now") { updater.checkForUpdates() }
+                    .disabled(!updater.canCheckForUpdates)
             }
         }
     }
