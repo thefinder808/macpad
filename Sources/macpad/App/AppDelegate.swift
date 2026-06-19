@@ -21,7 +21,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Menu-bar scratchpad. Built in AppKit because SwiftUI's MenuBarExtra does
     // not render a status item in this app.
     private var statusItem: NSStatusItem?
-    private let scratchpadPopover = NSPopover()
+    // An NSPanel (not NSPopover) so the pop-down draws OVER another app's native
+    // fullscreen Space. A .regular (Dock) app's NSPopover triggers a Space-switch
+    // and won't render over a fullscreen app; a borderless .nonactivatingPanel
+    // shows in place without activating macpad. Recipe mirrors MacPerf's
+    // StatusBarController. It's a KeyablePanel (see below) because a borderless
+    // panel can't become key by default — without that the TextEditor can't type.
+    private var scratchpadPanel: KeyablePanel!
+    private var eventMonitor: Any?
     private var settingsCancellable: AnyCancellable?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -53,10 +60,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu-bar scratchpad
 
     private func setUpMenuBarItem() {
-        scratchpadPopover.behavior = .transient   // dismiss on click-outside
-        scratchpadPopover.contentViewController = NSHostingController(
-            rootView: MenuBarScratchpadView().environmentObject(SettingsManager.shared)
+        // A borderless panel has no chrome of its own, so the SwiftUI content
+        // supplies the material background + rounded corners the popover used to.
+        let host = NSHostingController(
+            rootView: MenuBarScratchpadView()
+                .environmentObject(SettingsManager.shared)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
         )
+        let panel = KeyablePanel(contentRect: .zero,
+                                 styleMask: [.borderless, .nonactivatingPanel],
+                                 backing: .buffered, defer: true)
+        panel.contentViewController = host
+        panel.level = .statusBar
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.isFloatingPanel = true
+        panel.hidesOnDeactivate = false
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        scratchpadPanel = panel
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "note.text",
@@ -73,13 +96,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func toggleScratchpad(_ sender: Any?) {
-        guard let button = statusItem?.button else { return }
-        if scratchpadPopover.isShown {
-            scratchpadPopover.performClose(sender)
-        } else {
-            scratchpadPopover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            // Make the popover key so its TextEditor takes keyboard focus.
-            scratchpadPopover.contentViewController?.view.window?.makeKey()
+        scratchpadPanel.isVisible ? closeScratchpad() : openScratchpad()
+    }
+
+    private func openScratchpad() {
+        guard let button = statusItem?.button, let buttonWindow = button.window else { return }
+
+        // Size the panel to fit the SwiftUI content.
+        scratchpadPanel.contentViewController?.view.needsLayout = true
+        scratchpadPanel.contentViewController?.view.layoutSubtreeIfNeeded()
+        let size = scratchpadPanel.contentViewController?.view.fittingSize
+            ?? NSSize(width: 288, height: 320)
+
+        // Position centered just below the status-item button.
+        let buttonRect = buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
+        let frame = NSRect(x: buttonRect.midX - size.width / 2,
+                           y: buttonRect.minY - size.height - 4,
+                           width: size.width, height: size.height)
+        scratchpadPanel.setFrame(frame, display: true)
+        // KeyablePanel overrides canBecomeKey, so this borderless .nonactivatingPanel
+        // takes keyboard focus WITHOUT activating macpad — the scratchpad's TextEditor
+        // accepts typing while another app (including a fullscreen one) stays frontmost.
+        scratchpadPanel.makeKeyAndOrderFront(nil)
+
+        // Mimic the popover's .transient dismissal: close on any click outside.
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
+            [weak self] _ in self?.closeScratchpad()
         }
     }
+
+    private func closeScratchpad() {
+        scratchpadPanel.orderOut(nil)
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+    }
+}
+
+/// A borderless `NSWindow`/`NSPanel` returns `canBecomeKey == false` by default,
+/// which blocks the scratchpad's `TextEditor` from ever receiving keystrokes.
+/// Overriding it — together with the `.nonactivatingPanel` style — lets the panel
+/// take keyboard focus without activating macpad, so typing works even while
+/// another app (including one in native fullscreen) stays frontmost.
+final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
 }

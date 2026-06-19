@@ -23,8 +23,8 @@ set -euo pipefail
 
 APP_NAME="macpad"
 BUNDLE_ID="com.macpad.app"
-BUNDLE_VERSION="1.0.3"
-BUNDLE_SHORT_VERSION="1.0.3"
+BUNDLE_VERSION="1.0.4"
+BUNDLE_SHORT_VERSION="1.0.4"
 OUT_DIR="build"
 APP_BUNDLE="${OUT_DIR}/${APP_NAME}.app"
 ICON_SRC="Resources/AppIcon.icns"
@@ -119,6 +119,11 @@ make_info_plist() {
       </dict>
       <key>NSMessage</key>
       <string>sendSelectionToNewTab</string>
+      <key>NSKeyEquivalent</key>
+      <dict>
+        <key>default</key>
+        <string>Y</string>
+      </dict>
       <key>NSPortName</key>
       <string>${APP_NAME}</string>
       <key>NSSendTypes</key>
@@ -135,6 +140,11 @@ make_info_plist() {
       </dict>
       <key>NSMessage</key>
       <string>sendSelectionToCurrentTab</string>
+      <key>NSKeyEquivalent</key>
+      <dict>
+        <key>default</key>
+        <string>U</string>
+      </dict>
       <key>NSPortName</key>
       <string>${APP_NAME}</string>
       <key>NSSendTypes</key>
