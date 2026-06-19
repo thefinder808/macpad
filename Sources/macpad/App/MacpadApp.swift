@@ -7,6 +7,7 @@ struct MacpadApp: App {
     @StateObject private var appState = AppDelegate.shared
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var settingsManager = SettingsManager.shared
+    @StateObject private var updater = UpdaterService()
 
     var body: some Scene {
         // A single `Window` with a stable id: macpad is single-window (tabs
@@ -19,12 +20,23 @@ struct MacpadApp: App {
                 .environmentObject(appState)
                 .environmentObject(themeManager)
                 .environmentObject(settingsManager)
+                .environmentObject(updater)
                 .background(WindowAccessor(alwaysOnTop: settingsManager.alwaysOnTop))
                 .preferredColorScheme(themeManager.preferredColorScheme)
         }
         .defaultSize(width: 900, height: 600)
         .windowResizability(.contentMinSize)
         .commands {
+            // "Check for Updates…" under the app menu, next to "About macpad"
+            // (macOS convention). Sparkle owns the user-facing flow;
+            // canCheckForUpdates gates the item while a check is in flight.
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    updater.checkForUpdates()
+                }
+                .disabled(!updater.canCheckForUpdates)
+            }
+
             // File menu
             CommandGroup(replacing: .newItem) {
                 Button("New Tab") { appState.book.newUntitled() }

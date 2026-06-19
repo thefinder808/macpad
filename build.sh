@@ -18,6 +18,8 @@
 #                for a public GitHub Release. Requires the keychain profile
 #                set up via `xcrun notarytool store-credentials`.
 #   dmg        — rebuild DMG against the existing .app (no notarization)
+#   publish-appcast — push the generated Sparkle appcast.xml + DMGs to the
+#                gh-pages branch so installed apps see the new version
 #   clean      — remove build artifacts
 set -euo pipefail
 
@@ -46,7 +48,31 @@ DEVELOPER_ID="${DEVELOPER_ID:-Developer ID Application: Nathaniel Graham (Q6LRJQ
 # Override per-invocation with: NOTARY_PROFILE="other-profile" ./build.sh notarize
 NOTARY_PROFILE="${NOTARY_PROFILE:-traceview-notary}"
 
+# Sparkle auto-update. The appcast feed + signed DMGs are published to the
+# public gh-pages branch (macpad's repo is public); enclosures live under
+# /releases/.
+SU_FEED_URL="https://thefinder808.github.io/macpad/appcast.xml"
+# generate_appcast emits flat URLs; this prefix must match where
+# publish-appcast actually places the DMGs (/releases/) or Sparkle reports
+# "no update" with a silent 404 from GitHub Pages.
+SU_DOWNLOAD_URL_PREFIX="https://thefinder808.github.io/macpad/releases/"
+# EdDSA public key — generate ONCE with:
+#   .build/artifacts/sparkle/Sparkle/bin/generate_keys
+# (the private key is auto-stored in the login Keychain as
+# "https://sparkle-project.org" — never lose it; it signs every future update).
+# EMPTY here = key generation deferred. Empty disables runtime signature
+# verification (fine for dev); `notarize` refuses to ship without it.
+SU_PUBLIC_ED_KEY="${SU_PUBLIC_ED_KEY:-}"
+
 make_info_plist() {
+  # Emit SUPublicEDKey only when a key is set; an empty value would tell
+  # Sparkle to skip verification with a malformed key.
+  local sparkle_ed_key_block=""
+  if [[ -n "$SU_PUBLIC_ED_KEY" ]]; then
+    sparkle_ed_key_block="  <key>SUPublicEDKey</key>
+  <string>${SU_PUBLIC_ED_KEY}</string>
+"
+  fi
   cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -90,6 +116,14 @@ make_info_plist() {
   <false/>
   <key>NSHumanReadableCopyright</key>
   <string>© 2026 Nathaniel Graham.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>macpad uses Apple events to relaunch itself after installing an automatic update.</string>
+  <key>SUFeedURL</key>
+  <string>${SU_FEED_URL}</string>
+${sparkle_ed_key_block}  <key>SUEnableAutomaticChecks</key>
+  <true/>
+  <key>SUScheduledCheckInterval</key>
+  <integer>86400</integer>
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
@@ -170,15 +204,54 @@ build_icon() {
   fi
 }
 
+embed_sparkle() {
+  # Copy Sparkle.framework from the SwiftPM artifact cache into the .app.
+  # SPM extracts the XCFramework under .build/artifacts/sparkle/Sparkle/
+  # Sparkle.xcframework/<slice>/Sparkle.framework. Skip the /index-build/
+  # mirror (that copy is SourceKit's, not for shipping).
+  local sparkle_src
+  sparkle_src=$(find .build/artifacts -type d -name 'Sparkle.framework' 2>/dev/null \
+                | grep -v '/index-build/' | head -1)
+  if [[ -z "$sparkle_src" || ! -d "$sparkle_src" ]]; then
+    echo "✗ Sparkle.framework not found under .build/artifacts/."
+    echo "  Run 'swift package resolve' to fetch it, then retry."
+    exit 1
+  fi
+  mkdir -p "${APP_BUNDLE}/Contents/Frameworks"
+  rm -rf "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework"
+  cp -R "$sparkle_src" "${APP_BUNDLE}/Contents/Frameworks/"
+}
+
 sign_bundle() {
-  # Sign the .app. For ad-hoc dev builds pass "-"; for distribution pass
-  # the Developer ID identity string.
+  # Sign the .app INSIDE-OUT. For ad-hoc dev builds pass "-"; for distribution
+  # pass the Developer ID identity. NEVER use `codesign --deep` — it signs
+  # Sparkle's nested XPC services in the wrong order / with the wrong
+  # entitlements and breaks auto-update. Sign each Sparkle component, then the
+  # framework, then the .app. Downloader.xpc ships
+  # com.apple.security.network.client; --preserve-metadata=entitlements keeps
+  # it when re-signing with Developer ID (strip it → downloads fail silently).
   local sign_id="$1"
+  local sparkle_versions="${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework/Versions/B"
+
   if [[ "$sign_id" == "-" ]]; then
+    if [[ -d "$sparkle_versions" ]]; then
+      codesign --force --sign - "${sparkle_versions}/XPCServices/Installer.xpc" >/dev/null 2>&1 || true
+      codesign --force --sign - "${sparkle_versions}/XPCServices/Downloader.xpc" >/dev/null 2>&1 || true
+      codesign --force --sign - "${sparkle_versions}/Autoupdate" >/dev/null 2>&1 || true
+      codesign --force --sign - "${sparkle_versions}/Updater.app" >/dev/null 2>&1 || true
+      codesign --force --sign - "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework" >/dev/null 2>&1 || true
+    fi
     codesign --force --sign - "$APP_BUNDLE" >/dev/null 2>&1 || true
   else
-    codesign --force --sign "$sign_id" --options runtime --timestamp \
-      --entitlements "$ENTITLEMENTS_FILE" "$APP_BUNDLE"
+    local cs=(--force --sign "$sign_id" --options runtime --timestamp)
+    if [[ -d "$sparkle_versions" ]]; then
+      codesign "${cs[@]}" "${sparkle_versions}/XPCServices/Installer.xpc"
+      codesign "${cs[@]}" --preserve-metadata=entitlements "${sparkle_versions}/XPCServices/Downloader.xpc"
+      codesign "${cs[@]}" "${sparkle_versions}/Autoupdate"
+      codesign "${cs[@]}" "${sparkle_versions}/Updater.app"
+      codesign "${cs[@]}" "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework"
+    fi
+    codesign "${cs[@]}" --entitlements "$ENTITLEMENTS_FILE" "$APP_BUNDLE"
   fi
 }
 
@@ -201,6 +274,8 @@ build_bundle() {
   cp "$binary_path" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
   [[ -f "$ICON_SRC" ]] && cp "$ICON_SRC" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
   make_info_plist
+
+  embed_sparkle
 
   sign_bundle "$sign_id"
 
@@ -248,6 +323,16 @@ build_and_notarize() {
   local dist_dir="dist"
   local dmg_path="${dist_dir}/${APP_NAME}-${version}.dmg"
 
+  # 0. Refuse to ship without the Sparkle EdDSA public key — without it
+  # Sparkle skips update-signature verification and releases can be MITM'd.
+  if [[ -z "$SU_PUBLIC_ED_KEY" ]]; then
+    echo "✗ SU_PUBLIC_ED_KEY is empty — refusing to notarize an unverified build."
+    echo "  Generate the key once with:"
+    echo "    .build/artifacts/sparkle/Sparkle/bin/generate_keys"
+    echo "  then export SU_PUBLIC_ED_KEY=… (or set it at the top of build.sh)."
+    exit 1
+  fi
+
   # 1. Check Developer ID cert is installed
   if ! security find-identity -v -p codesigning | grep -q "${DEVELOPER_ID}"; then
     echo "✗ Developer ID cert not found in keychain:"
@@ -284,9 +369,87 @@ build_and_notarize() {
   spctl --assess --type execute --verbose=2 "$APP_BUNDLE"
   spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg_path"
 
+  echo "→ Generating Sparkle appcast (diffs against prior gh-pages releases)…"
+  generate_appcast_for_release "$dmg_path"
+
   echo ""
   echo "✓ Release artifact: ${dmg_path}"
-  echo "  Upload with: gh release create v${version} ${dmg_path} --notes-file <notes.md>"
+  echo "  Next steps:"
+  echo "    1. gh release create v${version} ${dmg_path} --notes-file <notes.md>"
+  echo "    2. ./build.sh publish-appcast    # push appcast.xml + DMG to gh-pages"
+}
+
+generate_appcast_for_release() {
+  # Stage the new DMG alongside prior releases pulled from gh-pages, then run
+  # generate_appcast against the combined folder (it emits delta updates vs
+  # prior versions). Output: build/appcast/{appcast.xml,*.dmg,*.delta}.
+  local new_dmg="$1"
+  local appcast_dir="${OUT_DIR}/appcast"
+  local gh_pages_wt="${OUT_DIR}/gh-pages"
+  local generate_appcast
+  generate_appcast=$(find .build/artifacts -type f -name generate_appcast 2>/dev/null \
+                     | grep -v '/index-build/' | head -1)
+  if [[ -z "$generate_appcast" || ! -x "$generate_appcast" ]]; then
+    echo "✗ generate_appcast not found under .build/artifacts — run 'swift package resolve'."
+    exit 1
+  fi
+
+  rm -rf "$appcast_dir"
+  mkdir -p "$appcast_dir"
+  cp "$new_dmg" "$appcast_dir/"
+
+  # Pull prior releases from gh-pages so generate_appcast can build deltas.
+  # No-op on the first release (branch doesn't exist yet).
+  rm -rf "$gh_pages_wt"
+  if git show-ref --verify --quiet refs/remotes/origin/gh-pages \
+     || git show-ref --verify --quiet refs/heads/gh-pages; then
+    git worktree add "$gh_pages_wt" gh-pages 2>/dev/null \
+      || { git fetch origin gh-pages && git worktree add "$gh_pages_wt" gh-pages; }
+    if [[ -d "${gh_pages_wt}/releases" ]]; then
+      cp -R "${gh_pages_wt}/releases/." "$appcast_dir/" 2>/dev/null || true
+    fi
+  else
+    echo "  (no gh-pages branch yet — generating the initial appcast only)"
+  fi
+
+  "$generate_appcast" --download-url-prefix "$SU_DOWNLOAD_URL_PREFIX" "$appcast_dir"
+  echo "✓ Appcast at ${appcast_dir}/appcast.xml"
+}
+
+publish_appcast() {
+  # Copy appcast.xml (root) + DMGs/deltas (releases/) onto the gh-pages
+  # worktree, commit, push. Kept separate from notarize so re-notarizing
+  # doesn't touch the public feed. Sparkle URLs in the appcast are relative
+  # to SU_DOWNLOAD_URL_PREFIX, so the DMGs MUST land under releases/.
+  local appcast_dir="${OUT_DIR}/appcast"
+  local gh_pages_wt="${OUT_DIR}/gh-pages"
+
+  if [[ ! -f "${appcast_dir}/appcast.xml" ]]; then
+    echo "✗ No appcast at ${appcast_dir}/appcast.xml — run './build.sh notarize' first."
+    exit 1
+  fi
+  if [[ ! -d "$gh_pages_wt" ]]; then
+    git worktree add "$gh_pages_wt" gh-pages 2>/dev/null \
+      || { git fetch origin gh-pages && git worktree add "$gh_pages_wt" gh-pages; }
+  fi
+
+  mkdir -p "${gh_pages_wt}/releases"
+  cp "${appcast_dir}/appcast.xml" "${gh_pages_wt}/appcast.xml"
+  find "$appcast_dir" -maxdepth 1 -type f \( -name '*.dmg' -o -name '*.delta' \) \
+    -exec cp {} "${gh_pages_wt}/releases/" \;
+
+  (
+    cd "$gh_pages_wt"
+    git add appcast.xml releases/
+    if git diff --cached --quiet; then
+      echo "✓ Nothing to publish — appcast already current."
+    else
+      git commit -m "Publish appcast for v${BUNDLE_SHORT_VERSION}"
+      echo "→ Pushing gh-pages…"
+      git push origin gh-pages
+      echo "✓ Published. Feed: ${SU_FEED_URL}"
+    fi
+  )
 }
 
 case "${1:-run}" in
@@ -332,12 +495,15 @@ case "${1:-run}" in
   dmg)
     build_dmg
     ;;
+  publish-appcast)
+    publish_appcast
+    ;;
   clean)
     swift package clean
     rm -rf "$OUT_DIR" dist
     ;;
   *)
-    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|clean}"
+    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|publish-appcast|clean}"
     exit 1
     ;;
 esac
