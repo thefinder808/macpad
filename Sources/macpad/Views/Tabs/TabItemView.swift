@@ -1,8 +1,10 @@
 import SwiftUI
 
-// Single Win11-style tab. Sits in the 40pt title band; the visible chip
-// is 36pt tall with rounded top corners only — the bottom edge sits
-// flush with the editor so the active tab "merges with content."
+// Single Elevated-style tab (direction 04A). The tab is a floating rounded
+// chip that lifts off the darker rail: the active chip carries an indigo
+// hairline + a soft accent shadow, inactive chips a subtle fill + border.
+// The close button is ALWAYS visible (including on inactive tabs) so a tab
+// can be closed without first activating it.
 struct TabItemView: View {
     @ObservedObject var tab: TabState
     let isActive: Bool
@@ -29,62 +31,63 @@ struct TabItemView: View {
     @State private var isCloseHovering = false
 
     var body: some View {
-        let shape = UnevenRoundedRectangle(
-            topLeadingRadius: Dim.tabCornerRadius,
-            bottomLeadingRadius: 0,
-            bottomTrailingRadius: 0,
-            topTrailingRadius: Dim.tabCornerRadius
-        )
+        let shape = RoundedRectangle(cornerRadius: Dim.tabFloatingCornerRadius, style: .continuous)
         Button(action: onSelect) {
-            HStack(spacing: 6) {
+            HStack(spacing: 7) {
                 Image(systemName: "doc")
                     .font(.system(size: 12))
-                Text(displayTitle)
-                    .font(.system(size: FontRole.tabLabelSize))
+                    .foregroundStyle(isActive ? theme.accentMuted : theme.tabFloatingInactiveText.opacity(0.85))
+                Text(tab.displayName)
+                    .font(.system(size: FontRole.tabLabelSize, weight: isActive ? .semibold : .regular))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 4)
+                if tab.isDirty {
+                    Circle()
+                        .fill(theme.accent)
+                        .frame(width: 6, height: 6)
+                        .shadow(color: theme.accent.opacity(0.7), radius: 3)
+                }
                 closeButton
             }
-            .padding(.horizontal, Dim.tabHorizontalPadding)
+            .padding(.horizontal, 11)
             .frame(minWidth: Dim.tabMinWidth, maxWidth: Dim.tabMaxWidth, alignment: .leading)
-            .frame(height: Dim.tabHeight)
-            .foregroundStyle(isActive ? theme.tabActiveText : theme.tabInactiveText)
-            .background(
-                shape.fill(backgroundFill)
-            )
+            .frame(height: Dim.tabFloatingHeight)
+            .foregroundStyle(isActive ? theme.tabActiveText : theme.tabFloatingInactiveText)
+            .background(shape.fill(backgroundFill))
+            .overlay(shape.strokeBorder(borderColor, lineWidth: 1))
+            .shadow(color: isActive ? theme.accent.opacity(0.28) : .clear, radius: 8, x: 0, y: 2)
             .contentShape(shape)
         }
         .buttonStyle(.plain)
-        .padding(.top, Dim.titleBarHeight - Dim.tabHeight)   // anchor to bottom of title band
+        .padding(.vertical, (Dim.titleBarHeight - Dim.tabFloatingHeight) / 2)   // center the chip in the title band
         .onHover { hovering in
             withAnimation(.easeOut(duration: Motion.hover)) { isHovering = hovering }
         }
     }
 
-    private var displayTitle: String {
-        tab.isDirty ? "\(tab.displayName) •" : tab.displayName
+    private var backgroundFill: Color {
+        if isActive { return theme.tabFloatingActiveFill }
+        if isHovering { return theme.subtleHoverFill }
+        return theme.tabFloatingInactiveFill
     }
 
-    private var backgroundFill: Color {
-        if isActive { return theme.tabActiveFill }
-        if isHovering { return theme.tabHoverFill }
-        return Color.clear
+    private var borderColor: Color {
+        isActive ? theme.tabFloatingActiveBorder : theme.tabFloatingInactiveBorder
     }
 
     @ViewBuilder
     private var closeButton: some View {
-        // Active tab always shows close; inactive only on hover.
-        let visible = isActive || isHovering
+        // Always visible — on the active AND inactive tabs.
         Button(action: { (onCloseWithPrompt ?? onClose)() }) {
             Image(systemName: "xmark")
                 .font(.system(size: 9, weight: .medium))
                 .frame(width: Dim.tabCloseSize, height: Dim.tabCloseSize)
+                .foregroundStyle(isCloseHovering ? theme.tabActiveText : theme.tabFloatingInactiveText)
                 .background(
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: 4)
                         .fill(isCloseHovering ? theme.subtleHoverFill : Color.clear)
                 )
-                .opacity(visible ? 1 : 0)
         }
         .buttonStyle(.plain)
         .onHover { hovering in

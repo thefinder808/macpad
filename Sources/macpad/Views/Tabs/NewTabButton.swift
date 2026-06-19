@@ -1,8 +1,9 @@
 import SwiftUI
 
-// "+" button immediately after the last tab. Matches Win11's tab strip
-// layout (the button moves rightward as tabs open, not fixed at the
-// right edge of the window).
+// "+" button immediately after the last tab. Matches the tab strip layout
+// (the button moves rightward as tabs open, not fixed at the right edge of
+// the window). Elevated direction (04A): centered vertically in the band to
+// line up with the floating tab chips.
 struct NewTabButton: View {
     let theme: any AppTheme
     let action: () -> Void
@@ -21,7 +22,6 @@ struct NewTabButton: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(theme.tabActiveText)
-        .padding(.top, Dim.titleBarHeight - Dim.chromeButtonSize)
         .onHover { hovering in
             withAnimation(.easeOut(duration: Motion.hover)) { isHovering = hovering }
         }

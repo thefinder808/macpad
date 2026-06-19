@@ -36,4 +36,15 @@ struct Win11DarkTheme: AppTheme {
     let settingsCardBackground      = Color(argbHex: 0x4C3A3A3A)
     let settingsCardBorder          = Color(argbHex: 0x19000000)
     let settingsRowSeparator        = Color(argbHex: 0x12FFFFFF)
+
+    // ── Elevated direction (04A) ───────────────────────────────────────────
+    let accent                      = Color(hex: 0x7C5CFF)              // indigo
+    let accentMuted                 = Color(hex: 0x9B82FF)
+    let chromeRail                  = Color(argbHex: 0x59000000)        // 35% black over Mica — the darker rail
+    let editorPanelBackground       = Color(hex: 0x282828)             // == editorBackground (the raised surface)
+    let tabFloatingActiveFill       = Color(hex: 0x282828)             // matches the panel; the chip "lifts" via border + shadow
+    let tabFloatingActiveBorder     = Color(argbHex: 0x737C5CFF)        // accent @ ~45%
+    let tabFloatingInactiveFill     = Color(argbHex: 0x08FFFFFF)        // 3% white
+    let tabFloatingInactiveBorder   = Color(argbHex: 0x14FFFFFF)        // 8% white
+    let tabFloatingInactiveText     = Color(hex: 0x9D9D9D)
 }

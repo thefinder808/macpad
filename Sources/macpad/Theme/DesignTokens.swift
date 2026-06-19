@@ -18,6 +18,13 @@ enum Dim {
     static let tabCornerRadius: CGFloat = 6        // top corners only
     static let tabHorizontalPadding: CGFloat = 8
 
+    // Elevated direction (04A) — floating tabs + raised editor panel
+    static let editorPanelInset: CGFloat = 8       // gap between panel and window edges (sides + bottom)
+    static let editorPanelCornerRadius: CGFloat = 10
+    static let tabFloatingHeight: CGFloat = 32     // visible chip height inside the title band
+    static let tabFloatingCornerRadius: CGFloat = 8
+    static let tabFloatingSpacing: CGFloat = 6     // gap between chips
+
     // Buttons (new tab, settings gear, find bar)
     static let chromeButtonSize: CGFloat = 32
     static let chromeButtonIcon: CGFloat = 16

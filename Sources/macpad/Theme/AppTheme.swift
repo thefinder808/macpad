@@ -40,4 +40,17 @@ protocol AppTheme {
     var settingsCardBackground: Color { get }
     var settingsCardBorder: Color { get }
     var settingsRowSeparator: Color { get }
+
+    // ── Elevated direction (04A) ───────────────────────────────────────────
+    // Indigo accent, floating tab chips, and a raised editor panel that sits
+    // on a darker "rail." See ContentView.EditorLayer and TabItemView.
+    var accent: Color { get }                      // primary indigo (dirty dot, 100% zoom, active border)
+    var accentMuted: Color { get }                 // softer indigo for the active tab's doc icon
+    var chromeRail: Color { get }                  // tint drawn over Mica behind tabs + around the panel
+    var editorPanelBackground: Color { get }       // raised editor surface (== editorBackground)
+    var tabFloatingActiveFill: Color { get }       // active chip fill (lifts off the rail)
+    var tabFloatingActiveBorder: Color { get }     // accent-tinted hairline around the active chip
+    var tabFloatingInactiveFill: Color { get }
+    var tabFloatingInactiveBorder: Color { get }
+    var tabFloatingInactiveText: Color { get }
 }

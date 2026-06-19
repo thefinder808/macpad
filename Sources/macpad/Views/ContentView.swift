@@ -85,6 +85,10 @@ struct ContentView: View {
 // Holds the active tab as @ObservedObject so it re-renders on the tab's own
 // publishes — crucially, when findState.isVisible toggles (⌘F / ⌘H). See the
 // note in ContentView.body for why this can't live inline in ContentView.
+//
+// Elevated direction (04A): the tab strip sits on a darker "rail," and the
+// editor + status bar are grouped into a single raised panel — rounded,
+// hairline-bordered, with a soft drop shadow, inset from the window edges.
 private struct EditorLayer: View {
     @ObservedObject var tab: TabState
     let theme: any AppTheme
@@ -92,6 +96,7 @@ private struct EditorLayer: View {
     var body: some View {
         VStack(spacing: 0) {
             TabStrip()
+
             if tab.findState.isVisible {
                 FindBar(
                     findState: tab.findState,
@@ -104,10 +109,23 @@ private struct EditorLayer: View {
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
-            EditorPane()
-            StatusBarView(tab: tab, theme: theme)
+
+            // ── Raised editor panel ────────────────────────────────────────
+            VStack(spacing: 0) {
+                EditorPane()
+                StatusBarView(tab: tab, theme: theme)
+            }
+            .background(theme.editorPanelBackground)
+            .clipShape(RoundedRectangle(cornerRadius: Dim.editorPanelCornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Dim.editorPanelCornerRadius, style: .continuous)
+                    .strokeBorder(theme.divider, lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(theme.isDark ? 0.45 : 0.13), radius: 14, x: 0, y: 6)
+            .padding(.horizontal, Dim.editorPanelInset)
+            .padding(.bottom, Dim.editorPanelInset)
         }
+        .background(theme.chromeRail)
         .animation(.easeOut(duration: Motion.findBarSlide), value: tab.findState.isVisible)
     }
 }
-

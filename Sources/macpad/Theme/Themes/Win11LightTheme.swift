@@ -37,4 +37,15 @@ struct Win11LightTheme: AppTheme {
     let settingsCardBackground      = Color(argbHex: 0x80FFFFFF)        // LayerFillColorDefault
     let settingsCardBorder          = Color(argbHex: 0x0F000000)
     let settingsRowSeparator        = Color(argbHex: 0x0F000000)
+
+    // ── Elevated direction (04A) ───────────────────────────────────────────
+    let accent                      = Color(hex: 0x6C4CEF)              // indigo
+    let accentMuted                 = Color(hex: 0x6C4CEF)
+    let chromeRail                  = Color(argbHex: 0x1A000000)        // 10% black over Mica — the darker rail
+    let editorPanelBackground       = Color(hex: 0xF9F9F9)             // == editorBackground (the raised surface)
+    let tabFloatingActiveFill       = Color(hex: 0xFFFFFF)             // pure white chip lifts off the off-white rail
+    let tabFloatingActiveBorder     = Color(argbHex: 0x736C4CEF)        // accent @ ~45%
+    let tabFloatingInactiveFill     = Color(argbHex: 0x08000000)        // 3% black
+    let tabFloatingInactiveBorder   = Color(argbHex: 0x17000000)        // 9% black
+    let tabFloatingInactiveText     = Color(hex: 0x666666)
 }

@@ -1,10 +1,13 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-// The full Win11 title-band: traffic-light inset + horizontal tab list +
+// The full title band: traffic-light inset + horizontal tab list +
 // new-tab button + spacer + settings gear. Lives in the 40pt zone above
-// the editor. Tabs scroll horizontally if they overflow (Phase 14 may
-// add overflow chevrons in true Win11 style).
+// the editor panel.
+//
+// Elevated direction (04A): the band is drawn over the darker `chromeRail`
+// (set on the parent EditorLayer), and the tabs are floating chips centered
+// vertically in the band rather than bottom-anchored merged tabs.
 struct TabStrip: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var themeManager: ThemeManager
@@ -18,7 +21,7 @@ struct TabStrip: View {
             Color.clear.frame(width: 12)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
+                HStack(spacing: Dim.tabFloatingSpacing) {
                     ForEach(appState.book.tabs) { tab in
                         TabItemView(
                             tab: tab,
@@ -54,11 +57,12 @@ struct TabStrip: View {
             SettingsGearButton(theme: theme) {
                 appState.isShowingSettings.toggle()
             }
-            .padding(.top, Dim.titleBarHeight - Dim.chromeButtonSize)
             .padding(.trailing, 4)
         }
         .frame(height: Dim.titleBarHeight)
-        .background(theme.chromeBackgroundTint)
+        // Background comes from EditorLayer's chromeRail; keep this clear so
+        // the rail reads as one continuous surface behind tabs and panel.
+        .background(Color.clear)
     }
 }
 
