@@ -3,8 +3,20 @@
     <channel>
         <title>macpad</title>
         <item>
+            <title>1.0.6</title>
+            <pubDate>Thu, 18 Jun 2026 21:36:46 -0500</pubDate>
+            <sparkle:version>1.0.6</sparkle:version>
+            <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://thefinder808.github.io/macpad/releases/macpad-1.0.6.dmg" length="1721587" type="application/octet-stream" sparkle:edSignature="rHR5LC3PqFeF1C/RV6hJwMBfkfcYPJRWBrVJd3xkDc+3Gicyzf6wkFzXK6otdna6Pl1QtcT3ng238uIknOiZCA=="/>
+            <sparkle:deltas>
+                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.6-1.0.5.delta" sparkle:deltaFrom="1.0.5" length="425350" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="6wrOVrmZjphtrzkg+3VslulCsykUPWDomwTOIq7RL2E7LvMA/pxZd/3Y6iQty1vXR3D6HSocaynbiLVW0r0gCg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>1.0.5</title>
-            <pubDate>Thu, 18 Jun 2026 21:16:49 -0500</pubDate>
+            <pubDate>Thu, 18 Jun 2026 21:36:46 -0500</pubDate>
             <sparkle:version>1.0.5</sparkle:version>
             <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
