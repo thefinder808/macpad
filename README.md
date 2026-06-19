@@ -28,6 +28,7 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 - **Menu-bar scratchpad** — a `note.text` icon in the menu bar pops down a quick-capture scratchpad you can paste into / copy from; push it into a new or the current tab, or open the app (toggle the icon in Settings)
 - **Tab drag-reorder**
 - **Custom app icon** designed for macpad — paper stack on a blue gradient (not Microsoft's Notepad icon)
+- **Automatic updates** — macpad checks for new versions and updates itself (App menu → Check for Updates…, or in the background; toggle in Settings → Software updates). Powered by [Sparkle](https://sparkle-project.org), with an EdDSA-signed appcast served from GitHub Pages.
 - **Notarized .dmg distribution** via `./build.sh notarize`
 
 ## Keyboard shortcuts
