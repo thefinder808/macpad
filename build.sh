@@ -379,6 +379,19 @@ build_and_notarize() {
   echo "    2. ./build.sh publish-appcast    # push appcast.xml + DMG to gh-pages"
 }
 
+ensure_gh_pages_worktree() {
+  # (Re)create a clean worktree for the gh-pages branch at $1. Robust to a
+  # stale/orphaned registration left by a prior publish: rm -rf'ing the dir
+  # without deregistering makes a later `git worktree add` fail with
+  # "missing but already registered", so we remove + prune first, then force-add.
+  local wt="$1"
+  git worktree remove --force "$wt" 2>/dev/null || true
+  rm -rf "$wt"
+  git worktree prune
+  git worktree add -f "$wt" gh-pages 2>/dev/null \
+    || { git fetch origin gh-pages && git worktree add -f "$wt" gh-pages; }
+}
+
 generate_appcast_for_release() {
   # Stage the new DMG alongside prior releases pulled from gh-pages, then run
   # generate_appcast against the combined folder (it emits delta updates vs
@@ -400,11 +413,9 @@ generate_appcast_for_release() {
 
   # Pull prior releases from gh-pages so generate_appcast can build deltas.
   # No-op on the first release (branch doesn't exist yet).
-  rm -rf "$gh_pages_wt"
   if git show-ref --verify --quiet refs/remotes/origin/gh-pages \
      || git show-ref --verify --quiet refs/heads/gh-pages; then
-    git worktree add "$gh_pages_wt" gh-pages 2>/dev/null \
-      || { git fetch origin gh-pages && git worktree add "$gh_pages_wt" gh-pages; }
+    ensure_gh_pages_worktree "$gh_pages_wt"
     if [[ -d "${gh_pages_wt}/releases" ]]; then
       cp -R "${gh_pages_wt}/releases/." "$appcast_dir/" 2>/dev/null || true
     fi
@@ -429,8 +440,7 @@ publish_appcast() {
     exit 1
   fi
   if [[ ! -d "$gh_pages_wt" ]]; then
-    git worktree add "$gh_pages_wt" gh-pages 2>/dev/null \
-      || { git fetch origin gh-pages && git worktree add "$gh_pages_wt" gh-pages; }
+    ensure_gh_pages_worktree "$gh_pages_wt"
   fi
 
   mkdir -p "${gh_pages_wt}/releases"
@@ -495,6 +505,12 @@ case "${1:-run}" in
   dmg)
     build_dmg
     ;;
+  gen-appcast)
+    # Regenerate the Sparkle appcast against the already-built dist DMG, with
+    # no re-notarization. Recovers a release whose notarize succeeded but whose
+    # appcast step failed.
+    generate_appcast_for_release "dist/${APP_NAME}-${BUNDLE_SHORT_VERSION}.dmg"
+    ;;
   publish-appcast)
     publish_appcast
     ;;
@@ -503,7 +519,7 @@ case "${1:-run}" in
     rm -rf "$OUT_DIR" dist
     ;;
   *)
-    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|publish-appcast|clean}"
+    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|gen-appcast|publish-appcast|clean}"
     exit 1
     ;;
 esac
