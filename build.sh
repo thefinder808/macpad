@@ -21,6 +21,9 @@
 #   publish-appcast — push the generated Sparkle appcast.xml + DMGs to the
 #                gh-pages branch so installed apps see the new version
 #   clean      — remove build artifacts
+#   lsclean    — prune stray LaunchServices registrations for the bundle ID
+#                (fixes a Gatekeeper "couldn't verify … free of malware" popup
+#                when setting macpad as the default .txt handler)
 set -euo pipefail
 
 APP_NAME="macpad"
@@ -462,6 +465,49 @@ publish_appcast() {
   )
 }
 
+lsclean() {
+  # Prune stray LaunchServices registrations for our bundle ID. The dev/release
+  # workflow leaves many: every `notarize` mounts a temp DMG as /Volumes/dmg.XXXX
+  # and registers the macpad inside it, git worktrees register their own build/
+  # copies, and opening the shipped DMG registers /Volumes/<APP>/<APP>.app. They
+  # pile up, and macOS can then resolve a file association (e.g. "Open .txt with
+  # macpad") to a stale/unmountable copy it can no longer verify → a Gatekeeper
+  # "couldn't verify … free of malware" popup. This unregisters every copy EXCEPT
+  # the installed /Applications/<APP>.app, then re-asserts that one. Surgical:
+  # other apps' "Open With" defaults are untouched (no global `lsregister -kill`).
+  # (Leftover /Volumes/dmg.* mounts, if any, can be cleared with `hdiutil detach`.)
+  local lsreg="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+  local canonical="/Applications/${APP_NAME}.app"
+  local found=0 path
+
+  echo "→ Pruning stray ${BUNDLE_ID} registrations (keeping ${canonical})…"
+  while IFS= read -r path; do
+    if [[ -z "$path" || "$path" == "$canonical" ]]; then
+      continue
+    fi
+    found=1
+    if "$lsreg" -u "$path" >/dev/null 2>&1; then
+      echo "  unregistered: $path"
+    else
+      echo "  (could not unregister): $path"
+    fi
+  done < <("$lsreg" -dump 2>/dev/null \
+            | sed -nE "s|^[[:space:]]*path:[[:space:]]+(.*/${APP_NAME}\.app) \(0x[0-9a-f]+\)[[:space:]]*\$|\1|p" \
+            | sort -u)
+  if [[ "$found" == 0 ]]; then
+    echo "  (no stray registrations found)"
+  fi
+
+  if [[ -d "$canonical" ]]; then
+    "$lsreg" -f "$canonical" >/dev/null 2>&1 || true
+    echo "✓ re-registered ${canonical}"
+  else
+    echo "⚠ ${canonical} not installed — run './build.sh install' or install the DMG first."
+  fi
+  killall Finder >/dev/null 2>&1 || true
+  echo "✓ LaunchServices pruned for ${BUNDLE_ID}."
+}
+
 case "${1:-run}" in
   build)
     swift build
@@ -518,8 +564,11 @@ case "${1:-run}" in
     swift package clean
     rm -rf "$OUT_DIR" dist
     ;;
+  lsclean)
+    lsclean
+    ;;
   *)
-    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|gen-appcast|publish-appcast|clean}"
+    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|gen-appcast|publish-appcast|clean|lsclean}"
     exit 1
     ;;
 esac
