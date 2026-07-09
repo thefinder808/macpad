@@ -8,7 +8,9 @@ import AppKit
 // The text is bound to `SettingsManager.scratchpadText` (UserDefaults-backed),
 // so it survives quit; Clear empties it. Sending reuses the same
 // `TabBookViewModel.receiveExternalText` plumbing as the "Send to macpad"
-// Services feature, reached via the `AppDelegate.shared` singleton.
+// Services feature, reached via the `AppDelegate.shared` singleton. Sending
+// does NOT focus macpad — it clears the field and flashes a "Sent" badge;
+// only the explicit "Open macpad" button surfaces the window.
 //
 // Elevated direction (04A): indigo accent, a rounded inset text field, a
 // prominent "New tab" action, and a refined "Open macpad" affordance with a
@@ -16,6 +18,12 @@ import AppKit
 struct MenuBarScratchpadView: View {
     @EnvironmentObject private var settingsManager: SettingsManager
     @Environment(\.colorScheme) private var colorScheme
+
+    // Transient "Sent" badge over the text field after a send; the generation
+    // counter keeps a rapid second send from cutting the new badge short when
+    // the first send's hide-timer fires.
+    @State private var showSentBadge = false
+    @State private var sendGeneration = 0
 
     private var accent: Color {
         colorScheme == .dark ? Color(red: 0.486, green: 0.361, blue: 1.0)   // #7C5CFF
@@ -53,6 +61,21 @@ struct MenuBarScratchpadView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(Color.primary.opacity(0.12))
                 )
+                .overlay {
+                    if showSentBadge {
+                        HStack(spacing: 6) {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Sent")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(accent))
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    }
+                }
 
             // Primary actions
             HStack(spacing: 8) {
@@ -101,12 +124,23 @@ struct MenuBarScratchpadView: View {
         .frame(width: 292)
     }
 
-    // Push the scratchpad text into a macpad tab, then surface the window so
-    // the result is visible. Leaves the scratchpad intact (Clear is manual).
+    // Push the scratchpad text into a macpad tab WITHOUT surfacing the window
+    // or activating macpad — the panel is a .nonactivatingPanel precisely so
+    // the frontmost app keeps focus while you fire off snippets. Feedback is
+    // local instead: a brief "Sent" badge pulses over the field and the
+    // scratchpad clears, ready for the next snippet.
     private func send(into destination: ExternalTextDestination) {
         guard !isBlank else { return }
         AppDelegate.shared.book.receiveExternalText(settingsManager.scratchpadText, into: destination)
-        openMacpad()
+        settingsManager.scratchpadText = ""
+
+        sendGeneration += 1
+        let generation = sendGeneration
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) { showSentBadge = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            guard generation == sendGeneration else { return }
+            withAnimation(.easeOut(duration: 0.25)) { showSentBadge = false }
+        }
     }
 
     private func openMacpad() {
