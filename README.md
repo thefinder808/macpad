@@ -25,7 +25,7 @@ A native macOS text editor inspired by the Windows 11 Notepad.
 - **Dark / Light / System** themes (Win11 color tokens verified against the open-source `microsoft-ui-xaml` repo)
 - **Finder integration** — Open With, drag-and-drop a file onto the window to open as a new tab
 - **Send to macpad** — select text in any app, then right-click → Services → "Send to macpad (New Tab)" / "(Current Tab)" to stash it in macpad without leaving the app you're in, or use the default keyboard shortcuts ⌘⇧Y (New Tab) / ⌘⇧U (Current Tab). Enable once — and rebind the shortcuts to anything you like — in System Settings → Keyboard → Keyboard Shortcuts → Services.
-- **Menu-bar scratchpad** — a `note.text` icon in the menu bar pops down a quick-capture scratchpad you can paste into / copy from; push it into a new or the current tab, or open the app (toggle the icon in Settings)
+- **Menu-bar scratchpad** — a `note.text` icon in the menu bar pops down a quick-capture scratchpad you can paste into / copy from; push it into a new or the current tab without macpad stealing focus (a "Sent" badge confirms and the pad clears, so you never leave the app you're working in — even one in fullscreen), or open the app itself (toggle the icon in Settings)
 - **Tab drag-reorder**
 - **Custom app icon** designed for macpad — paper stack on a blue gradient (not Microsoft's Notepad icon)
 - **Automatic updates** — macpad checks for new versions and updates itself (App menu → Check for Updates…, or in the background; toggle in Settings → Software updates). Powered by [Sparkle](https://sparkle-project.org), with an EdDSA-signed appcast served from GitHub Pages.
