@@ -35,6 +35,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSWindow.allowsAutomaticWindowTabbing = false
     }
 
+    /// THE file-open entry point: `open -a macpad a.txt b.txt`, Finder
+    /// multi-select → Open With, double-clicking a .txt, and drag-to-Dock all
+    /// land here, cold launch or warm.
+    ///
+    /// This must NOT be paired with a SwiftUI `.onOpenURL` in the scene. With
+    /// one installed, SwiftUI takes the FIRST url of a batch for itself and
+    /// forwards only urls 2…n here — which is how "open 3 files, get 1 tab"
+    /// happened: `.onOpenURL` was the only handler, so the tail was dropped on
+    /// the floor. Measured on macOS 15.6 (cold and warm, `Window` scene):
+    ///   with .onOpenURL:    onOpenURL←a.txt,  delegate←[b.txt, c.txt]
+    ///                       single file:      delegate←[] (so no double-open)
+    ///   without .onOpenURL: delegate←[a.txt, b.txt, c.txt]
+    /// So the delegate alone sees the whole batch — see the note in ContentView.
+    ///
+    /// Reaches the live book via `Self.shared`, the same singleton AppState the
+    /// SwiftUI scene binds (mirrors ServiceProvider). Safe before the scene
+    /// mounts: macOS delivers this ahead of applicationDidFinishLaunching on a
+    /// cold launch, and touching `shared` runs session restore first, so opened
+    /// tabs land alongside restored ones rather than racing them.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        let failures = Self.shared.book.openAll(urls: urls)
+        reportOpenFailures(failures)
+    }
+
+    // One alert for the whole batch — opening five unreadable files should not
+    // stack five modal dialogs.
+    private func reportOpenFailures(_ failures: [(url: URL, error: Error)]) {
+        guard let first = failures.first else { return }
+        if failures.count == 1 {
+            NSAlert(error: first.error).runModal()
+            return
+        }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn’t open \(failures.count) files."
+        alert.informativeText = failures
+            .map { "\($0.url.lastPathComponent) — \($0.error.localizedDescription)" }
+            .joined(separator: "\n")
+        alert.runModal()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Wire up the macOS Services provider so other apps' right-click →
         // Services → "Send to macpad" reaches us. NSUpdateDynamicServices

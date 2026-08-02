@@ -46,13 +46,13 @@ struct ContentView: View {
             handleFileDrop(providers: providers)
         }
         // Files opened via macOS "Open With macpad" or `open -a macpad <file>`.
-        .onOpenURL { url in
-            do {
-                try appState.book.open(url: url)
-            } catch {
-                NSAlert(error: error).runModal()
-            }
-        }
+        // NOTE: no `.onOpenURL` here, deliberately. Files opened via "Open With
+        // macpad" / `open -a macpad …` are handled by AppDelegate's
+        // application(_:open:), which is the only handler that sees a whole
+        // batch. Installing `.onOpenURL` again makes SwiftUI siphon off the
+        // FIRST url of every batch and forward only the rest to the delegate —
+        // that split is what made `open -a macpad a.txt b.txt c.txt` open one
+        // tab. Don't re-add it; see the measurements in AppDelegate.
         // Capture the scene's openWindow action so the AppKit menu-bar popover
         // can bring this window forward / reopen it if closed.
         .onAppear {

@@ -128,6 +128,29 @@ final class TabBookViewModel: ObservableObject {
         return tab
     }
 
+    /// Open a batch of files — `open -a macpad a.txt b.txt c.txt`, or a Finder
+    /// multi-select → Open With. Called from `AppDelegate.application(_:open:)`,
+    /// which is where macOS delivers the whole batch.
+    ///
+    /// Each url is opened independently and failures are *returned* rather than
+    /// thrown, so one unreadable file can't strand the files after it and the
+    /// caller can raise a single combined alert instead of one modal per file.
+    /// Files already open focus their existing tab (see `open(url:)`), so a
+    /// repeated url — within the batch or across batches — never duplicates.
+    /// The last url ends active, matching a single-file open.
+    @discardableResult
+    func openAll(urls: [URL]) -> [(url: URL, error: Error)] {
+        var failures: [(url: URL, error: Error)] = []
+        for url in urls {
+            do {
+                try open(url: url)
+            } catch {
+                failures.append((url, error))
+            }
+        }
+        return failures
+    }
+
     func select(_ id: UUID) {
         guard tabs.contains(where: { $0.id == id }) else { return }
         activeTabID = id
