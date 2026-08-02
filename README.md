@@ -58,9 +58,17 @@ Standard macOS text-editing shortcuts (⌘Z undo, ⇧⌘Z redo, ⌘A select all,
 
 <p align="center"><img src="docs/screenshots/multi-tab.png" width="820" alt="Multiple tabs open"></p>
 
+Drag a tab and it follows the cursor while its neighbours slide aside to open the gap:
+
+<p align="center"><img src="docs/screenshots/tab-drag.png" width="820" alt="A tab lifted mid-drag, with the neighbouring tabs parted to open a gap"></p>
+
 <p align="center"><img src="docs/screenshots/find-replace.png" width="820" alt="Find and replace bar with regex and match-case toggles"></p>
 
-<p align="center"><img src="docs/screenshots/settings.png" width="820" alt="Win11-styled settings page"></p>
+<p align="center"><img src="docs/screenshots/settings.png" width="820" alt="Settings page in light mode"></p>
+
+The menu-bar scratchpad, for stashing text without leaving the app you're in:
+
+<p align="center"><img src="docs/screenshots/scratchpad.png" width="300" alt="The menu-bar scratchpad pop-down, with New tab, Add to current, Clear, and Open macpad actions"></p>
 
 ## Install
 
