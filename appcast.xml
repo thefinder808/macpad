@@ -3,35 +3,36 @@
     <channel>
         <title>macpad</title>
         <item>
+            <title>1.0.8</title>
+            <pubDate>Sun, 02 Aug 2026 12:01:06 -0500</pubDate>
+            <sparkle:version>1.0.8</sparkle:version>
+            <sparkle:shortVersionString>1.0.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://thefinder808.github.io/macpad/releases/macpad-1.0.8.dmg" length="1748936" type="application/octet-stream" sparkle:edSignature="DxwoV+o4D2E6X4vMKQsmzPIDP7y78oSPdR+y2qqjFb78TQj+H6qVJjV13cR56d1faG/vW1sxJVbxb8IWw8vrDg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.8-1.0.7.delta" sparkle:deltaFrom="1.0.7" length="115962" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="GMJv/1lVmzq+fxkFlc5RIHDlvuLWH6tPLlK3MamjwObYJ1rSlTFx4uDePTThGW5wkwHMHZYr64QDVQw64zfyAg=="/>
+                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.8-1.0.6.delta" sparkle:deltaFrom="1.0.6" length="125022" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="Pv/bLlkKYOyJjj82BhtrFE8bRdP+3FhaQwvYaWlI44pDI3SGi7d+pzuR2yRz9Q1sNOAMk7HN7Dhk62we5X86DA=="/>
+                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.8-1.0.5.delta" sparkle:deltaFrom="1.0.5" length="474022" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="gqg8ktC+4W09iz5HYbdstWGJgbfSZ/gM4k/tHAzoJY9pMX0KTahoO0XRBeT5wNE9d0S/z3uvK6+qZlBtim1gAg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>1.0.7</title>
-            <pubDate>Thu, 09 Jul 2026 18:08:33 -0500</pubDate>
+            <pubDate>Sun, 02 Aug 2026 12:01:06 -0500</pubDate>
             <sparkle:version>1.0.7</sparkle:version>
             <sparkle:shortVersionString>1.0.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure url="https://thefinder808.github.io/macpad/releases/macpad-1.0.7.dmg" length="1725969" type="application/octet-stream" sparkle:edSignature="HOZH9ovbDFpOnGnO+m7raERZ+yALGhQBQtgzRDbevqWxqmNNuEnbDjnCaIog2DEhF766v2nto6B3PIHnDaOrBw=="/>
-            <sparkle:deltas>
-                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.7-1.0.6.delta" sparkle:deltaFrom="1.0.6" length="64634" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="m+nD/7UmxkJoA1AuAaEuC/wxqdlnsjGbqzot3oLQj5dR9PlkASZZeSKKdRN0rTH9DvwzMuq6Z8/Q5uI/J8NJAA=="/>
-                <enclosure url="https://thefinder808.github.io/macpad/releases/macpad1.0.7-1.0.5.delta" sparkle:deltaFrom="1.0.5" length="431002" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977808" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="M7eYwx5GsIvWMzwuR1Z5DekOKSXRe0cWCOUoKwmcby0YeaeQWFo5ZgMGTJ/X7V7fbTzAM6khxf2UtwvSscYlDA=="/>
-            </sparkle:deltas>
         </item>
         <item>
             <title>1.0.6</title>
-            <pubDate>Thu, 09 Jul 2026 18:08:33 -0500</pubDate>
+            <pubDate>Sun, 02 Aug 2026 12:01:06 -0500</pubDate>
             <sparkle:version>1.0.6</sparkle:version>
             <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure url="https://thefinder808.github.io/macpad/releases/macpad-1.0.6.dmg" length="1721587" type="application/octet-stream" sparkle:edSignature="rHR5LC3PqFeF1C/RV6hJwMBfkfcYPJRWBrVJd3xkDc+3Gicyzf6wkFzXK6otdna6Pl1QtcT3ng238uIknOiZCA=="/>
-        </item>
-        <item>
-            <title>1.0.5</title>
-            <pubDate>Thu, 09 Jul 2026 18:08:33 -0500</pubDate>
-            <sparkle:version>1.0.5</sparkle:version>
-            <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure url="https://thefinder808.github.io/macpad/releases/macpad-1.0.5.dmg" length="1784824" type="application/octet-stream" sparkle:edSignature="9AlTcO3CI//4F4ZIBXomUh0DL4qNXFssF+Em5gwowZ/i6pyIy7QrI6s6Jym0Eoim7qOAL62SxQehdW+pUa/XCg=="/>
         </item>
     </channel>
 </rss>
