@@ -35,6 +35,15 @@ enum AutosaveStore {
     // MARK: - Paths
 
     static var sessionsDir: URL {
+        // Tests redirect the session store with MACPAD_SESSIONS_DIR. Without
+        // this, any test that mutates a TabBookViewModel writes a manifest to
+        // the real store and the next launch restores the test's tabs instead
+        // of the user's. Read via getenv (not ProcessInfo.environment) so a
+        // setenv() inside a test's setUp is picked up in the same process.
+        if let raw = getenv("MACPAD_SESSIONS_DIR") {
+            let path = String(cString: raw)
+            if !path.isEmpty { return URL(fileURLWithPath: path, isDirectory: true) }
+        }
         let support = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return support

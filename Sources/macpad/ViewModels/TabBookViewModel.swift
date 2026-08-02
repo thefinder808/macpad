@@ -128,6 +128,29 @@ final class TabBookViewModel: ObservableObject {
         return tab
     }
 
+    /// Open a batch of files — `open -a macpad a.txt b.txt c.txt`, or a Finder
+    /// multi-select → Open With. Called from `AppDelegate.application(_:open:)`,
+    /// which is where macOS delivers the whole batch.
+    ///
+    /// Each url is opened independently and failures are *returned* rather than
+    /// thrown, so one unreadable file can't strand the files after it and the
+    /// caller can raise a single combined alert instead of one modal per file.
+    /// Files already open focus their existing tab (see `open(url:)`), so a
+    /// repeated url — within the batch or across batches — never duplicates.
+    /// The last url ends active, matching a single-file open.
+    @discardableResult
+    func openAll(urls: [URL]) -> [(url: URL, error: Error)] {
+        var failures: [(url: URL, error: Error)] = []
+        for url in urls {
+            do {
+                try open(url: url)
+            } catch {
+                failures.append((url, error))
+            }
+        }
+        return failures
+    }
+
     func select(_ id: UUID) {
         guard tabs.contains(where: { $0.id == id }) else { return }
         activeTabID = id
@@ -171,12 +194,15 @@ final class TabBookViewModel: ObservableObject {
         }
     }
 
-    func reorder(from source: Int, to destination: Int) {
-        guard source != destination,
-              tabs.indices.contains(source),
-              destination >= 0, destination <= tabs.count else { return }
-        let item = tabs.remove(at: source)
-        let dest = destination > source ? destination - 1 : destination
-        tabs.insert(item, at: dest)
+    /// Moves a tab to a new array index (clamped). The active tab's identity
+    /// is unaffected — reordering never changes which tab is focused.
+    /// Called by the tab strip's drag commit with an index already computed
+    /// by TabDragMath, so the caller owns the insertion semantics.
+    func move(_ id: UUID, toIndex index: Int) {
+        guard let from = tabs.firstIndex(where: { $0.id == id }) else { return }
+        let clamped = min(max(index, 0), tabs.count - 1)
+        guard clamped != from else { return }
+        let tab = tabs.remove(at: from)
+        tabs.insert(tab, at: clamped)
     }
 }

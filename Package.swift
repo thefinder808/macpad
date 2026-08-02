@@ -23,6 +23,11 @@ let package = Package(
                 // copies the framework into Contents/Frameworks/.
                 .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
             ]
+        ),
+        .testTarget(
+            name: "macpadTests",
+            dependencies: ["macpad"],
+            path: "Tests/macpadTests"
         )
     ]
 )
