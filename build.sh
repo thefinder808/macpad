@@ -28,8 +28,8 @@ set -euo pipefail
 
 APP_NAME="macpad"
 BUNDLE_ID="com.macpad.app"
-BUNDLE_VERSION="1.0.7"
-BUNDLE_SHORT_VERSION="1.0.7"
+BUNDLE_VERSION="1.0.8"
+BUNDLE_SHORT_VERSION="1.0.8"
 OUT_DIR="build"
 APP_BUNDLE="${OUT_DIR}/${APP_NAME}.app"
 ICON_SRC="Resources/AppIcon.icns"
