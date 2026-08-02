@@ -9,6 +9,10 @@ struct TabItemView: View {
     @ObservedObject var tab: TabState
     let isActive: Bool
     let theme: any AppTheme
+    /// Hover reported by the AppKit drag surface, which out-hit-tests SwiftUI's
+    /// own .onHover across the label area. OR'd with the local hover, which
+    /// still covers the trailing close-button zone the surface leaves free.
+    let surfaceHover: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
     let onCloseWithPrompt: (() -> Void)?
@@ -16,19 +20,23 @@ struct TabItemView: View {
     init(tab: TabState,
          isActive: Bool,
          theme: any AppTheme,
+         surfaceHover: Bool = false,
          onSelect: @escaping () -> Void,
          onClose: @escaping () -> Void,
          onCloseWithPrompt: (() -> Void)? = nil) {
         self.tab = tab
         self.isActive = isActive
         self.theme = theme
+        self.surfaceHover = surfaceHover
         self.onSelect = onSelect
         self.onClose = onClose
         self.onCloseWithPrompt = onCloseWithPrompt
     }
 
-    @State private var isHovering = false
+    @State private var localHover = false
     @State private var isCloseHovering = false
+
+    private var isHovering: Bool { localHover || surfaceHover }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Dim.tabFloatingCornerRadius, style: .continuous)
@@ -62,7 +70,7 @@ struct TabItemView: View {
         .buttonStyle(.plain)
         .padding(.vertical, (Dim.titleBarHeight - Dim.tabFloatingHeight) / 2)   // center the chip in the title band
         .onHover { hovering in
-            withAnimation(.easeOut(duration: Motion.hover)) { isHovering = hovering }
+            withAnimation(.easeOut(duration: Motion.hover)) { localHover = hovering }
         }
     }
 

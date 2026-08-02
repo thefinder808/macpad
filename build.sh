@@ -512,6 +512,9 @@ case "${1:-run}" in
   build)
     swift build
     ;;
+  test)
+    swift test
+    ;;
   app)
     build_bundle debug
     ;;
@@ -568,7 +571,7 @@ case "${1:-run}" in
     lsclean
     ;;
   *)
-    echo "usage: $0 {build|app|run|open|release|install|notarize|dmg|gen-appcast|publish-appcast|clean|lsclean}"
+    echo "usage: $0 {build|test|app|run|open|release|install|notarize|dmg|gen-appcast|publish-appcast|clean|lsclean}"
     exit 1
     ;;
 esac

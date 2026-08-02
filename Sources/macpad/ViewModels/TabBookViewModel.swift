@@ -171,12 +171,15 @@ final class TabBookViewModel: ObservableObject {
         }
     }
 
-    func reorder(from source: Int, to destination: Int) {
-        guard source != destination,
-              tabs.indices.contains(source),
-              destination >= 0, destination <= tabs.count else { return }
-        let item = tabs.remove(at: source)
-        let dest = destination > source ? destination - 1 : destination
-        tabs.insert(item, at: dest)
+    /// Moves a tab to a new array index (clamped). The active tab's identity
+    /// is unaffected — reordering never changes which tab is focused.
+    /// Called by the tab strip's drag commit with an index already computed
+    /// by TabDragMath, so the caller owns the insertion semantics.
+    func move(_ id: UUID, toIndex index: Int) {
+        guard let from = tabs.firstIndex(where: { $0.id == id }) else { return }
+        let clamped = min(max(index, 0), tabs.count - 1)
+        guard clamped != from else { return }
+        let tab = tabs.remove(at: from)
+        tabs.insert(tab, at: clamped)
     }
 }
